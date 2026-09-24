@@ -1,0 +1,2 @@
+This page type is unknown.
+Return a title only when one is printed. Leave every other field null.

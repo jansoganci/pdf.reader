@@ -25,7 +25,7 @@ These rules apply to every change in this repository.
 
 ## Change control
 
-- Cache only on the full key: PDF hash, model version, prompt version, schema version, preprocessing version, and grouping-rules version.
+- Cache only when the PDF hash and the pipeline signature match. The signature covers provider, model, effort, every prompt and schema version, preprocessing, grouping, and normalization. User corrections do not change it.
 - A schema or prompt change requires a version bump and a fixture update.
 - Validation rules require tests.
 - New document types are registry modules, not a central chain of vendor names.

@@ -1,0 +1,2 @@
+Read the carrier invoice.
+Copy the supplier name, invoice number, date, currency, net, tax, total, bill of lading, and containers as printed.

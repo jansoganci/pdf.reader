@@ -1,0 +1,3 @@
+Label every page with one document type from the allowed list.
+Return the page number and a short title only when it is printed.
+Use unknown when the type is not in the list.

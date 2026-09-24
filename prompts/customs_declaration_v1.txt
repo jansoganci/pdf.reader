@@ -1,0 +1,3 @@
+Read the customs declaration.
+Copy the declaration number, date, invoiced amount, printed exchange rate, printed freight, printed insurance, printed customs value, bill of lading, containers, HS code, and package count as printed.
+Do not calculate the customs value.

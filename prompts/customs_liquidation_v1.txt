@@ -1,0 +1,3 @@
+Read the customs liquidation.
+Copy the declaration number, liquidation number, dates, article customs value, each printed tax line, and the payment total as printed.
+Do not calculate the customs value.

@@ -1,0 +1,2 @@
+Read this logistics invoice only.
+Copy the supplier name, invoice number, date, currency, net, tax, total, bill of lading, and containers as printed.

@@ -12,7 +12,15 @@ Streamlit handles the screen only. A Python service owns preprocessing, classifi
 
 Original PDFs stay in a local data folder outside git. SQLite stores the dossier, the extraction run, and the review. An API key belongs in a local `.env` file, which is never committed.
 
-Setup and run commands will be added when the application is created.
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements-dev.txt
+pytest
+streamlit run app/ui/app.py --server.port 8765 --server.address 127.0.0.1
+```
+
+The default provider is `fake`. It does not call Anthropic and it does not invent amounts. A live call also requires `LIVE_EXTRACTION=1` and `ANTHROPIC_API_KEY`. Do not set that until live testing is explicitly approved.
 
 ## Phase 1 limits
 

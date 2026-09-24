@@ -1,0 +1,3 @@
+For each page, copy the printed document key and the printed page marker.
+A document key is an invoice number, declaration number, or licence number.
+Leave a field null when it is not printed. Do not invent one.

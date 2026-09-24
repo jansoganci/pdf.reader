@@ -1,0 +1,2 @@
+Read the import licence.
+Copy the licence number, date, currency, total, FOB, freight, HS code, and regime text as printed.
