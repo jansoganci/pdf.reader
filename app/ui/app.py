@@ -7,7 +7,9 @@ from app.service import (
     get_dossier,
     list_dossiers,
     mark_export_with_errors,
+    merge_document,
     process_upload,
+    split_document,
 )
 
 st.set_page_config(page_title="Import dossier reader", layout="wide")
@@ -75,6 +77,21 @@ new_value = st.text_input("Corrected value")
 if st.button("Save correction") and new_value != "":
     correct_field(dossier.id, selected, field_name, new_value)
     st.rerun()
+
+st.subheader("Correct grouping")
+if st.button("Merge with previous document"):
+    try:
+        merge_document(dossier.id, selected)
+        st.rerun()
+    except ValueError as exc:
+        st.error(str(exc))
+after_page = st.number_input("Split after page", min_value=1, step=1)
+if st.button("Split document after that page"):
+    try:
+        split_document(dossier.id, selected, int(after_page))
+        st.rerun()
+    except ValueError as exc:
+        st.error(str(exc))
 
 errors = [item for item in dossier.validation if item.status == "failed" and item.severity == "error"]
 if errors:

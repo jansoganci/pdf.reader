@@ -25,7 +25,7 @@ class FakeProvider:
             return ProviderTransportError(message="temporary network failure", usage=self._usage())
         return ProviderSuccess(payload=payload, usage=self._usage())
 
-    def classify_pages(self, images: list[bytes], note: str | None = None) -> ProviderResult:
+    def classify_pages(self, images: list[bytes], note: str | None = None, page_numbers: list[int] | None = None) -> ProviderResult:
         payload = self.script.get("classify")
         if payload is None:
             payload = {
@@ -36,7 +36,7 @@ class FakeProvider:
             }
         return self._result("classify", payload)
 
-    def read_boundary_evidence(self, images: list[bytes], note: str | None = None) -> ProviderResult:
+    def read_boundary_evidence(self, images: list[bytes], note: str | None = None, page_numbers: list[int] | None = None) -> ProviderResult:
         payload = self.script.get("boundary")
         if payload is None:
             payload = {
@@ -47,7 +47,13 @@ class FakeProvider:
             }
         return self._result("boundary", payload)
 
-    def extract_document(self, document_type: str, images: list[bytes], note: str | None = None) -> ProviderResult:
+    def extract_document(
+        self,
+        document_type: str,
+        images: list[bytes],
+        note: str | None = None,
+        page_numbers: list[int] | None = None,
+    ) -> ProviderResult:
         sequence = self.script.get("extract_sequence")
         if sequence:
             payload = sequence.pop(0)

@@ -46,14 +46,23 @@ def process_pdf(
     images = [image for _, image in pages]
     usage = Usage()
     try:
-        classify_call, classified = call_structured(provider.classify_pages, ClassifyPayload, images)
+        page_numbers = [number for number, _ in pages]
+        classify_call, classified = call_structured(
+            lambda imgs, note: provider.classify_pages(imgs, note, page_numbers),
+            ClassifyPayload,
+            images,
+        )
         _add_usage(usage, classify_call)
         if classified is None or not isinstance(classified, ClassifyPayload):
             return _failed(filename, sha256, signature, usage, "classification_failed")
         by_page = {item.page_number: item for item in classified.pages}
         if set(by_page) != set(range(1, len(pages) + 1)):
             return _failed(filename, sha256, signature, usage, "classification_pages_incomplete")
-        boundary_call, boundary = call_structured(provider.read_boundary_evidence, BoundaryPayload, images)
+        boundary_call, boundary = call_structured(
+            lambda imgs, note: provider.read_boundary_evidence(imgs, note, page_numbers),
+            BoundaryPayload,
+            images,
+        )
         _add_usage(usage, boundary_call)
         if not isinstance(boundary, BoundaryPayload):
             return _failed(filename, sha256, signature, usage, "boundary_failed")
@@ -74,8 +83,11 @@ def process_pdf(
         for index, group in enumerate(group_pages(evidence), start=1):
             document_type = group[0].document_type
             group_images = [images[page.page_number - 1] for page in group]
+            group_pages_numbers = [page.page_number for page in group]
             call, extracted = call_structured(
-                lambda imgs, note, kind=document_type: provider.extract_document(kind, imgs, note),
+                lambda imgs, note, kind=document_type, nums=group_pages_numbers: provider.extract_document(
+                    kind, imgs, note, nums
+                ),
                 MoneyDocument,
                 group_images,
             )

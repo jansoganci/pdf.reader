@@ -1,3 +1,11 @@
-Label every page with one document type from the allowed list.
-Return the page number and a short title only when it is printed.
-Use unknown when the type is not in the list.
+Label every page with one document type.
+The images are in reading order. The first image is source page 1.
+supplier_invoice: a commercial invoice from the foreign supplier.
+import_licence: an import licence or engagement d'importation.
+customs_declaration: a customs declaration, such as a déclaration unique de marchandises.
+customs_liquidation: a customs liquidation, payment notice, or quittance.
+carrier_invoice: an ocean carrier or shipping-line invoice.
+logistics_invoice: an inland logistics invoice, such as storage or weighing, that is not the ocean carrier and not the customs broker.
+broker_invoice: a customs broker or transitaire invoice.
+unknown: any other page.
+Return the printed title only when it is printed. Use unknown when the page does not match a type above.

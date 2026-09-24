@@ -26,13 +26,18 @@ ProviderResult = ProviderSuccess | ProviderRefusal | ProviderTransportError
 
 
 class AIProvider(Protocol):
-    def classify_pages(self, images: list[bytes], note: str | None = None) -> ProviderResult: ...
+    def classify_pages(
+        self, images: list[bytes], note: str | None = None, page_numbers: list[int] | None = None
+    ) -> ProviderResult: ...
 
-    def read_boundary_evidence(self, images: list[bytes], note: str | None = None) -> ProviderResult: ...
+    def read_boundary_evidence(
+        self, images: list[bytes], note: str | None = None, page_numbers: list[int] | None = None
+    ) -> ProviderResult: ...
 
     def extract_document(
         self,
         document_type: str,
         images: list[bytes],
         note: str | None = None,
+        page_numbers: list[int] | None = None,
     ) -> ProviderResult: ...

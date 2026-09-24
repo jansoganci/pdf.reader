@@ -10,6 +10,7 @@ from app.models import Dossier
 from app.pdf.render import PdfRejected
 from app.providers.fake import FakeProvider
 from app.storage import db
+from app.review.grouping import merge_with_previous, split_after_page
 from app.validation.rules import validate_dossier
 
 log = logging.getLogger("dossier")
@@ -86,6 +87,26 @@ def correct_field(dossier_id: str, document_id: str, field_name: str, user_value
     dossier.export_with_errors = False
     db.update_current(dossier, False)
     log.info("correction dossier=%s document=%s field=%s", dossier_id, document_id, field_name)
+    return dossier
+
+
+def merge_document(dossier_id: str, document_id: str) -> Dossier:
+    dossier = db.get_dossier(dossier_id)
+    if dossier is None:
+        raise KeyError(dossier_id)
+    merge_with_previous(dossier, document_id)
+    db.update_current(dossier, False)
+    log.info("merge dossier=%s document=%s", dossier_id, document_id)
+    return dossier
+
+
+def split_document(dossier_id: str, document_id: str, after_page: int) -> Dossier:
+    dossier = db.get_dossier(dossier_id)
+    if dossier is None:
+        raise KeyError(dossier_id)
+    split_after_page(dossier, document_id, after_page)
+    db.update_current(dossier, False)
+    log.info("split dossier=%s document=%s after_page=%s", dossier_id, document_id, after_page)
     return dossier
 
 

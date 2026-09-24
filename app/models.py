@@ -73,6 +73,7 @@ class DocumentRecord(BaseModel):
     fields: dict[str, FieldValue]
     lines: list[LineRecord] = Field(default_factory=list)
     boundary: list[PageEvidence] = Field(default_factory=list)
+    held_extractions: list["DocumentRecord"] = Field(default_factory=list)
 
 
 class Usage(BaseModel):

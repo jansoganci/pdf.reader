@@ -1,3 +1,4 @@
+import re
 from decimal import Decimal
 
 from app.models import DocumentRecord, Dossier, FieldValue, ValidationResult
@@ -110,7 +111,8 @@ def _cross_rules(dossier: Dossier) -> list[ValidationResult]:
             bls.append(str(bl.value).replace(" ", ""))
         box = document.fields.get("containers")
         if box and box.value:
-            containers.append(tuple(sorted(part.strip() for part in str(box.value).split(";") if part.strip())))
+            found = re.findall(r"[A-Z]{4}\d{7}", str(box.value).upper())
+            containers.append(tuple(sorted(set(found))) if found else (str(box.value).strip(),))
         number = document.fields.get("document_number")
         if number and number.value:
             numbers.append(str(number.value))

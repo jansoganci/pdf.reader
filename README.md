@@ -20,7 +20,7 @@ pytest
 streamlit run app/ui/app.py --server.port 8765 --server.address 127.0.0.1
 ```
 
-The default provider is `fake`. It does not call Anthropic and it does not invent amounts. A live call also requires `LIVE_EXTRACTION=1` and `ANTHROPIC_API_KEY`. Do not set that until live testing is explicitly approved.
+The default provider is `fake`. It does not call Anthropic and it does not invent amounts. A live call requires `EXTRACTION_PROVIDER=anthropic`, `LIVE_EXTRACTION=1`, and `ANTHROPIC_API_KEY` in `.env`. Company approval for this PoC is recorded. Leave the provider on `fake` when you only want the local screen.
 
 ## Phase 1 limits
 

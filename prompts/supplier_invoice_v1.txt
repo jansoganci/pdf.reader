@@ -1,2 +1,3 @@
 Read the foreign supplier commercial invoice.
-Copy the invoice number, date, currency, total, FOB, freight, weights, package count, shipment numbers, and each line as printed.
+Copy the invoice number, date, currency, total, FOB, freight, weights, package count, shipment numbers, and each goods line as printed.
+Do not copy the total row as a line.

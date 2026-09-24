@@ -1,2 +1,3 @@
 Read the customs broker invoice.
 Copy the supplier name, invoice number, date, currency, taxable amount, non-taxable amount, tax amounts, and total as printed.
+Do not copy the total row as a line. Do not calculate a customs value.
