@@ -6,7 +6,6 @@ from app.service import (
     correct_field,
     export_dossier,
     get_dossier,
-    list_dossiers,
     mark_export_with_errors,
     merge_document,
     page_image,
@@ -106,43 +105,53 @@ def _selected_document(dossier: Dossier) -> DocumentRecord:
     return dossier.documents[0]
 
 
-def _read_pdf(uploaded) -> None:
-    with st.spinner("Reading the PDF…"):
-        try:
-            dossier = process_upload(uploaded.getvalue(), uploaded.name)
-        except PdfRejected as exc:
-            st.error(exc.message)
-            return
-        except RuntimeError as exc:
-            st.error(str(exc))
-            return
-    st.session_state["dossier_id"] = dossier.id
-    st.session_state["paper_id"] = dossier.documents[0].id if dossier.documents else None
+def _start_home() -> None:
+    st.session_state.pop("dossier_id", None)
+    st.session_state.pop("paper_id", None)
+    st.session_state.pop("pending", None)
     st.rerun()
-
-
-@st.dialog("Read another PDF")
-def read_dialog() -> None:
-    uploaded = st.file_uploader("Choose a PDF", type=["pdf"])
-    if uploaded is not None and st.button("Read this PDF", type="primary"):
-        _read_pdf(uploaded)
 
 
 if "show_passed" not in st.session_state:
     st.session_state["show_passed"] = False
 
-rows = list_dossiers()
-dossier_id = st.session_state.get("dossier_id")
-if not dossier_id and rows:
-    dossier_id = rows[0]["id"]
-    st.session_state["dossier_id"] = dossier_id
+pending = st.session_state.get("pending")
+if pending:
+    st.header("Reading the PDF")
+    st.write(f"{pending['name']} is being read now.")
+    st.write("Please wait. This takes about a minute. Do not close this page.")
+    with st.status("Sending the PDF to be read…", expanded=True) as status:
+        try:
+            dossier = process_upload(pending["data"], pending["name"], use_cache=False)
+        except PdfRejected as exc:
+            st.session_state.pop("pending", None)
+            st.error(exc.message)
+            if st.button("Back"):
+                _start_home()
+            st.stop()
+        except RuntimeError as exc:
+            st.session_state.pop("pending", None)
+            st.error(str(exc))
+            if st.button("Back"):
+                _start_home()
+            st.stop()
+        status.update(label="Reading finished", state="complete")
+    st.session_state.pop("pending", None)
+    st.session_state["dossier_id"] = dossier.id
+    st.session_state["paper_id"] = dossier.documents[0].id if dossier.documents else None
+    st.rerun()
 
+dossier_id = st.session_state.get("dossier_id")
 if not dossier_id:
-    st.header("Import file")
-    st.write("Upload one PDF. The app reads each paper, shows the amounts, and lets you correct them.")
-    uploaded = st.file_uploader("PDF", type=["pdf"])
-    if uploaded is not None and st.button("Read this PDF", type="primary"):
-        _read_pdf(uploaded)
+    st.header("Would you like to read a new import file?")
+    st.write("Choose a PDF, then click Read. Nothing from an earlier file is shown here.")
+    uploaded = st.file_uploader("Import PDF", type=["pdf"])
+    if st.button("Read this PDF", type="primary"):
+        if uploaded is None:
+            st.warning("Choose a PDF first.")
+        else:
+            st.session_state["pending"] = {"name": uploaded.name, "data": uploaded.getvalue()}
+            st.rerun()
     st.stop()
 
 dossier = get_dossier(dossier_id)
@@ -159,8 +168,8 @@ with head_left:
     st.caption(f"{dossier.filename} · {file_status(dossier.status)}")
 with head_right:
     actions = st.columns([1.3, 1, 1, 1.4])
-    if actions[0].button("Read another PDF"):
-        read_dialog()
+    if actions[0].button("Read another file"):
+        _start_home()
     if blocking and not dossier.export_with_errors:
         allow = actions[3].checkbox("Download anyway")
         if allow:
@@ -175,23 +184,6 @@ with head_right:
         if csv_path and json_path:
             actions[1].download_button("Download CSV", csv_path.read_bytes(), file_name="fields.csv")
             actions[2].download_button("Download JSON", json_path.read_bytes(), file_name="import-file.json", type="primary")
-
-if rows:
-    seen: dict[str, int] = {}
-    unique = {}
-    for row in rows:
-        label = f"{row['filename']} · {file_status(row['status'])}"
-        seen[label] = seen.get(label, 0) + 1
-        if seen[label] > 1:
-            label = f"{label} · {row['created_at']}"
-        unique[label] = row["id"]
-    options = list(unique)
-    index = next((i for i, label in enumerate(options) if unique[label] == dossier.id), 0)
-    choice = st.selectbox("Open a saved file", options, index=index)
-    if unique[choice] != dossier.id:
-        st.session_state["dossier_id"] = unique[choice]
-        st.session_state["paper_id"] = None
-        st.rerun()
 
 if failed:
     st.markdown(f'<div class="banner warn">{len(failed)} items need a check before you download.</div>', unsafe_allow_html=True)

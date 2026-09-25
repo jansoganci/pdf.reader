@@ -38,14 +38,15 @@ def provider_for():
     raise RuntimeError("Unknown extraction provider.")
 
 
-def process_upload(data: bytes, filename: str, provider=None) -> Dossier:
+def process_upload(data: bytes, filename: str, provider=None, use_cache: bool = True) -> Dossier:
     configure_logging()
     digest = hashlib.sha256(data).hexdigest()
     signature = pipeline_signature()
-    cached = db.find_cached(digest, signature)
+    cached = db.find_cached(digest, signature) if use_cache else None
     if cached is not None:
         log.info("cache hit dossier=%s", cached.id)
         return cached
+    log.info("reading file provider=%s", settings.extraction_provider if provider is None else "scripted")
     chosen = provider if provider is not None else provider_for()
     render_dir = settings.data_dir / "renders" / digest
     try:
