@@ -76,8 +76,7 @@ def money_text(value, currency: str | None) -> str:
         number = Decimal(str(value))
     except (InvalidOperation, ValueError):
         return str(value)
-    places = abs(number.as_tuple().exponent)
-    text = f"{number:,.{places}f}" if places > 2 else f"{number:,.2f}"
+    text = f"{number:,.2f}"
     if currency:
         return f"{text} {currency}"
     return text
