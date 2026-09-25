@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Import file — sample screen</title>
+  <style>
+    :root {
+      --bg: #f4f1ea;
+      --paper: #fffcf7;
+      --ink: #1c1915;
+      --muted: #6b645b;
+      --line: #e4ddd2;
+      --amber: #8a5a12;
+      --amber-bg: #f8ecd8;
+      --green: #1f6b45;
+      --green-bg: #e5f4eb;
+      --shadow: 0 1px 2px rgba(28, 25, 21, 0.06);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font: 16px/1.45 "Iowan Old Style", Palatino, "Palatino Linotype", Georgia, serif;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 24px;
+      padding: 20px 32px;
+      background: var(--paper);
+      border-bottom: 1px solid var(--line);
+    }
+    h1 { font-size: 22px; font-weight: 600; margin: 0; letter-spacing: -0.02em; }
+    .file-name { color: var(--muted); margin-top: 2px; }
+    .actions { display: flex; gap: 8px; }
+    button, .btn {
+      font: 15px/1 "Segoe UI", sans-serif;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: white;
+      padding: 10px 14px;
+      cursor: pointer;
+    }
+    .primary { background: var(--ink); color: white; border-color: var(--ink); }
+    main { padding: 24px 32px 48px; max-width: 1280px; margin: 0 auto; }
+    .banner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--amber-bg);
+      color: var(--amber);
+      border-radius: 12px;
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      font-family: "Segoe UI", sans-serif;
+      font-size: 15px;
+    }
+    .totals { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+    .card {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 14px 16px;
+      box-shadow: var(--shadow);
+    }
+    .card .label { font-family: "Segoe UI", sans-serif; font-size: 13px; color: var(--muted); }
+    .card .amount { font-size: 22px; margin-top: 4px; }
+    .card .who { font-family: "Segoe UI", sans-serif; font-size: 13px; color: var(--muted); margin-top: 4px; }
+    .tag {
+      display: inline-block;
+      margin-top: 8px;
+      font-family: "Segoe UI", sans-serif;
+      font-size: 12px;
+      background: var(--amber-bg);
+      color: var(--amber);
+      border-radius: 999px;
+      padding: 3px 8px;
+    }
+    .layout { display: grid; grid-template-columns: 300px 1fr; gap: 16px; }
+    .list { display: flex; flex-direction: column; gap: 8px; }
+    .paper-item {
+      text-align: left;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px 14px;
+    }
+    .paper-item.active { border-color: var(--ink); box-shadow: var(--shadow); }
+    .paper-item strong { display: block; font-size: 16px; }
+    .paper-item span { color: var(--muted); font-family: "Segoe UI", sans-serif; font-size: 13px; }
+    .detail { display: grid; grid-template-columns: 280px 1fr; gap: 16px; }
+    .scan {
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      min-height: 420px;
+      padding: 16px;
+    }
+    .scan .sheet {
+      height: 360px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background:
+        linear-gradient(#f7f4ee, #f7f4ee) 16px 28px / calc(100% - 32px) 8px no-repeat,
+        linear-gradient(#efeae2, #efeae2) 16px 48px / 70% 8px no-repeat,
+        linear-gradient(#efeae2, #efeae2) 16px 68px / 86% 8px no-repeat,
+        linear-gradient(#efeae2, #efeae2) 16px 88px / 60% 8px no-repeat,
+        #fff;
+    }
+    .scan p { font-family: "Segoe UI", sans-serif; font-size: 13px; color: var(--muted); margin: 10px 0 0; }
+    table { width: 100%; border-collapse: collapse; background: var(--paper); border-radius: 12px; overflow: hidden; }
+    th, td { text-align: left; padding: 12px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    th { font-family: "Segoe UI", sans-serif; font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+    td .printed { color: var(--muted); font-size: 14px; }
+    .linkish { background: none; border: none; color: var(--ink); text-decoration: underline; padding: 0; font-family: "Segoe UI", sans-serif; }
+    .checks { margin-top: 16px; display: flex; flex-direction: column; gap: 8px; }
+    .check {
+      background: var(--paper);
+      border-left: 4px solid var(--amber);
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-family: "Segoe UI", sans-serif;
+    }
+    .note { margin-top: 20px; color: var(--muted); font-family: "Segoe UI", sans-serif; font-size: 13px; }
+    @media (max-width: 900px) {
+      header, main { padding-left: 16px; padding-right: 16px; }
+      .totals, .layout, .detail { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Import file</h1>
+      <div class="file-name">maroc-import-document.pdf · Needs a check</div>
+    </div>
+    <div class="actions">
+      <button>Download CSV</button>
+      <button class="primary">Download JSON</button>
+    </div>
+  </header>
+  <main>
+    <div class="banner">
+      <span>4 amounts need a check before you download.</span>
+      <button>Show passed checks</button>
+    </div>
+    <section class="totals">
+      <article class="card">
+        <div class="label">Supplier invoice</div>
+        <div class="amount">18,921.09 EUR</div>
+        <div class="who">Issued by the seller</div>
+      </article>
+      <article class="card">
+        <div class="label">Customs value</div>
+        <div class="amount">210,800.00 MAD</div>
+        <div class="who">Copied from the customs papers</div>
+      </article>
+      <article class="card">
+        <div class="label">Customs payment</div>
+        <div class="amount">44,004.00 MAD</div>
+        <span class="tag">Needs a check</span>
+      </article>
+      <article class="card">
+        <div class="label">Shipping invoice</div>
+        <div class="amount">6,796.80 MAD</div>
+        <div class="who">Issued by Maersk A/S</div>
+      </article>
+    </section>
+    <div class="layout">
+      <nav class="list">
+        <button class="paper-item"><strong>Broker invoice</strong><span>Page 1 · Issued by Transit Trust · 6,830.00 MAD</span></button>
+        <button class="paper-item"><strong>Customs payment</strong><span>Pages 2–3 · 44,004.00 MAD</span></button>
+        <button class="paper-item"><strong>Logistics invoice</strong><span>Page 4 · Issued by ONCF · 144.00 MAD</span></button>
+        <button class="paper-item"><strong>Logistics invoice</strong><span>Page 5 · Issued by ONCF · 720.00 MAD</span></button>
+        <button class="paper-item active"><strong>Shipping invoice</strong><span>Pages 6–7 · Issued by Maersk A/S · 6,796.80 MAD</span></button>
+        <button class="paper-item"><strong>Customs declaration</strong><span>Page 8 · 210,800.00 MAD</span></button>
+        <button class="paper-item"><strong>Supplier invoice</strong><span>Page 9 · 18,921.09 EUR</span></button>
+        <button class="paper-item"><strong>Import licence</strong><span>Page 10 · 18,921.09 EUR</span></button>
+      </nav>
+      <section class="detail">
+        <div class="scan">
+          <div class="sheet"></div>
+          <p>Page 6 of the PDF. Page 7 is the next page of this same invoice.</p>
+        </div>
+        <div>
+          <table>
+            <thead>
+              <tr><th>Field</th><th>Value</th><th>Printed text</th><th></th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Issued by</td>
+                <td>Maersk A/S</td>
+                <td class="printed">Maersk A/S</td>
+                <td><button class="linkish">Correct</button></td>
+              </tr>
+              <tr>
+                <td>Invoice number</td>
+                <td>7631239091</td>
+                <td class="printed">7631239091 · page 6</td>
+                <td><button class="linkish">Correct</button></td>
+              </tr>
+              <tr>
+                <td>Invoice date</td>
+                <td>24 Aug 2026</td>
+                <td class="printed">Aug 24, 2026</td>
+                <td><button class="linkish">Correct</button></td>
+              </tr>
+              <tr>
+                <td>Net</td>
+                <td>6,464.00 MAD</td>
+                <td class="printed">6,464.00</td>
+                <td><button class="linkish">Correct</button></td>
+              </tr>
+              <tr>
+                <td>Tax</td>
+                <td>332.80 MAD</td>
+                <td class="printed">332.80</td>
+                <td><button class="linkish">Correct</button></td>
+              </tr>
+              <tr>
+                <td>Total</td>
+                <td>6,796.80 MAD <span class="tag">Needs a check</span></td>
+                <td class="printed">6,796.80</td>
+                <td><button class="linkish">Correct</button></td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="checks">
+            <div class="check">Shipping invoice: the lines on the page do not add up to 6,796.80 MAD. Net plus tax does match the total.</div>
+          </div>
+          <p class="note">Join with the paper above · Split after page 6</p>
+        </div>
+      </section>
+    </div>
+    <p class="note">Sample screen only. The company name is read from the page. Next time “Issued by” can be a different carrier, broker, or warehouse.</p>
+  </main>
+</body>
+</html>

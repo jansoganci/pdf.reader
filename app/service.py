@@ -7,7 +7,7 @@ from app.extraction.pipeline import process_pdf
 from app.extraction.signature import pipeline_signature
 from app.export.writers import dossier_json, fields_csv, lines_csv
 from app.models import Dossier
-from app.pdf.render import PdfRejected
+from app.pdf.render import PdfRejected, render_page_preview
 from app.providers.fake import FakeProvider
 from app.storage import db
 from app.review.grouping import merge_with_previous, split_after_page
@@ -117,6 +117,13 @@ def mark_export_with_errors(dossier_id: str, allowed: bool) -> Dossier:
     dossier.export_with_errors = allowed
     db.update_current(dossier, allowed)
     return dossier
+
+
+def page_image(dossier_id: str, page_number: int) -> bytes | None:
+    path = db.original_path(dossier_id)
+    if not path.exists():
+        return None
+    return render_page_preview(path.read_bytes(), page_number)
 
 
 def export_dossier(dossier_id: str, kind: str) -> Path:

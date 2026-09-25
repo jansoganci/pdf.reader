@@ -51,6 +51,16 @@ def render_pdf(data: bytes, work_dir: Path) -> list[tuple[int, bytes]]:
     return pages
 
 
+def render_page_preview(data: bytes, page_number: int) -> bytes:
+    document = fitz.open(stream=data, filetype="pdf")
+    try:
+        page = document[page_number - 1]
+        zoom = 110 / 72
+        return page.get_pixmap(matrix=fitz.Matrix(zoom, zoom), alpha=False).tobytes("jpeg", jpg_quality=70)
+    finally:
+        document.close()
+
+
 def cleanup_renders(work_dir: Path) -> None:
     if work_dir.exists():
         shutil.rmtree(work_dir, ignore_errors=True)
