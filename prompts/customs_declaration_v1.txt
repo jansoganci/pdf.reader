@@ -1,4 +1,4 @@
 Read the customs declaration.
-Copy the full declaration number when both a short reference and a long number are printed.
+The document number is the long declaration number. When both a short registration and a long number are printed, copy the long number. Do not copy the short registration.
 Copy the date, invoiced amount, printed exchange rate, printed freight, printed insurance, printed customs value, bill of lading, containers, HS code, and package count as printed.
 Do not calculate the customs value.

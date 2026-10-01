@@ -46,6 +46,24 @@ def fields_csv(dossier: Dossier) -> str:
                     field.method,
                 ]
             )
+    for key, value in dossier.manual.items():
+        document_id, _, name = key.partition(":")
+        if not name:
+            document_id, name = "", key
+        writer.writerow(
+            [
+                document_id,
+                "",
+                safe_cell(name),
+                safe_cell(value),
+                "",
+                safe_cell(value),
+                "",
+                "",
+                "missing",
+                "user",
+            ]
+        )
     return buffer.getvalue()
 
 

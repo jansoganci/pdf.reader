@@ -76,7 +76,7 @@ def parse_currency(raw: str | None) -> tuple[str | None, bool]:
         return None, False
     text = str(raw).strip().upper()
     aliases = {
-        "€": "EUR", "EURO": "EUR", "EUROS": "EUR", "DH": "MAD", "MAD": "MAD",
+        "€": "EUR", "EURO": "EUR", "EUROS": "EUR", "DH": "MAD", "DHS": "MAD", "MAD": "MAD",
         "DIRHAM": "MAD", "DIRHAMS": "MAD", "USD": "USD", "EUR": "EUR", "$": "USD",
     }
     code = aliases.get(text)

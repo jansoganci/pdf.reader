@@ -1,3 +1,7 @@
 Read the customs liquidation.
-Copy the declaration number, liquidation number, dates, article customs value, each printed tax line, and the payment total as printed.
-Do not calculate the customs value.
+The document number is the liquidation number printed beside "N° ET DATE LIQUIDATION". Do not put the declaration number in that field.
+The document date is the date on that same liquidation line. Do not use the declaration date.
+The customs value is the printed article value (VALEUR). Do not calculate it.
+The tax amount is the single tax line whose code is 002109. Do not use the sous-total or the payment total as the tax.
+The total amount is the payment total printed on the recap. Keep it separate from the tax line.
+Copy each printed tax line as a line. Do not copy a total row as a line.

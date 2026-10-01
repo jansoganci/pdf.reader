@@ -96,6 +96,7 @@ class Dossier(BaseModel):
     status: str
     documents: list[DocumentRecord]
     validation: list[ValidationResult] = Field(default_factory=list)
+    manual: dict[str, str] = Field(default_factory=dict)
     export_with_errors: bool = False
     usage: Usage = Field(default_factory=Usage)
     estimated_cost_usd: float = 0.0

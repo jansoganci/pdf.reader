@@ -39,16 +39,38 @@ def validate_dossier(dossier: Dossier) -> list[ValidationResult]:
     return results
 
 
+def _line_sum(document: DocumentRecord) -> Decimal | None:
+    amounts = [_money(line.fields.get("amount")) for line in document.lines]
+    present = [amount for amount in amounts if amount is not None]
+    if not present:
+        return None
+    return sum(present, Decimal("0"))
+
+
+def _before_tax(document: DocumentRecord) -> Decimal | None:
+    total = _money(document.fields.get("total_amount"))
+    tax = _money(document.fields.get("tax_amount"))
+    net = _money(document.fields.get("net_amount"))
+    if total is not None and tax is not None:
+        return total - tax
+    if net is not None:
+        return net
+    return total
+
+
 def _document_rules(document: DocumentRecord) -> list[ValidationResult]:
     results = []
     total = _money(document.fields.get("total_amount"))
-    line_amounts = [_money(line.fields.get("amount")) for line in document.lines]
-    present = [amount for amount in line_amounts if amount is not None]
-    if present and total is not None:
-        ok = abs(sum(present, Decimal("0")) - total) <= _TOLERANCE
-        if not ok:
-            _mark_review(document.fields.get("total_amount"))
-        results.append(_result("lines_sum_to_total", ok, "Invoice lines equal the printed total.", [document.id]))
+    net = _money(document.fields.get("net_amount"))
+    tax = _money(document.fields.get("tax_amount"))
+    lines = _line_sum(document)
+    if document.document_type not in {"customs_declaration", "customs_liquidation"}:
+        target = _before_tax(document)
+        if lines is not None and target is not None:
+            ok = abs(lines - target) <= _TOLERANCE
+            if not ok:
+                _mark_review(document.fields.get("total_amount"))
+            results.append(_result("lines_sum_to_total", ok, "Invoice lines equal the amount before tax.", [document.id]))
     fob = _money(document.fields.get("fob_amount"))
     freight = _money(document.fields.get("freight_amount"))
     if fob is not None and freight is not None and total is not None:
@@ -56,10 +78,9 @@ def _document_rules(document: DocumentRecord) -> list[ValidationResult]:
         if not ok:
             _mark_review(document.fields.get("total_amount"))
         results.append(_result("fob_plus_freight", ok, "FOB plus freight equals the printed total.", [document.id]))
-    net = _money(document.fields.get("net_amount"))
-    tax = _money(document.fields.get("tax_amount"))
     if net is not None and tax is not None and total is not None:
-        ok = abs((net + tax) - total) <= _TOLERANCE
+        lines_explain_total = lines is not None and abs((lines + tax) - total) <= _TOLERANCE
+        ok = abs((net + tax) - total) <= _TOLERANCE or lines_explain_total
         if not ok:
             _mark_review(document.fields.get("total_amount"))
         results.append(_result("net_plus_tax", ok, "Net plus tax equals the printed total.", [document.id]))
@@ -70,6 +91,14 @@ def _document_rules(document: DocumentRecord) -> list[ValidationResult]:
             _result("supported_currency", False, "Currency is not EUR, MAD, or USD.", [document.id], "warning")
         )
     return results
+
+
+def _bl_keys(value: str) -> set[str]:
+    found = set(re.findall(r"\d{8,}", value))
+    if found:
+        return found
+    compact = re.sub(r"\s+", "", value)
+    return {compact} if compact else set()
 
 
 def _first(dossier: Dossier, document_type: str) -> DocumentRecord | None:
@@ -108,18 +137,18 @@ def _cross_rules(dossier: Dossier) -> list[ValidationResult]:
     for document in dossier.documents:
         bl = document.fields.get("bill_of_lading")
         if bl and bl.value:
-            bls.append(str(bl.value).replace(" ", ""))
+            bls.append(_bl_keys(str(bl.value)))
         box = document.fields.get("containers")
         if box and box.value:
             found = re.findall(r"[A-Z]{4}\d{7}", str(box.value).upper())
-            containers.append(tuple(sorted(set(found))) if found else (str(box.value).strip(),))
+            if found:
+                containers.append(tuple(sorted(set(found))))
         number = document.fields.get("document_number")
         if number and number.value:
             numbers.append(str(number.value))
-    if len(set(bls)) > 1:
-        results.append(_result("bill_of_lading_matches", False, "Bill of lading values differ.", []))
-    elif len(bls) > 1:
-        results.append(_result("bill_of_lading_matches", True, "Bill of lading values match.", []))
+    if len(bls) > 1:
+        ok = bool(set.intersection(*bls))
+        results.append(_result("bill_of_lading_matches", ok, "Bill of lading values match." if ok else "Bill of lading values differ.", []))
     if len(set(containers)) > 1:
         results.append(_result("containers_match", False, "Container lists differ.", []))
     elif len(containers) > 1:

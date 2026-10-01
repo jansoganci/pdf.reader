@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     max_pages: int = 40
     preprocessing_version: str = "1"
     grouping_rules_version: str = "1"
-    normalization_version: str = "3"
+    normalization_version: str = "4"
     system_prompt_version: str = "1"
 
     @property

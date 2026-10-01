@@ -3,7 +3,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from app.documents.common import RawField, RawLine
 from app.models import DocumentType
 
-PROMPT_VERSION = "3"
+PROMPT_VERSION = "4"
 SCHEMA_VERSION = "1"
 
 

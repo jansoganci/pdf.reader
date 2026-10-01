@@ -44,6 +44,69 @@ NUMBER_NAMES = {
     "unknown": "Number",
 }
 
+COPY_FIELDS = {
+    "supplier_invoice": [
+        "supplier_name", "document_number", "document_date", "currency",
+        "total_amount", "fob_amount", "freight_amount",
+    ],
+    "import_licence": [
+        "supplier_name", "document_number", "document_date", "currency",
+        "total_amount", "fob_amount", "freight_amount", "hs_code", "regime",
+    ],
+    "customs_declaration": [
+        "document_number", "document_date", "customs_value", "exchange_rate",
+        "bill_of_lading", "containers", "hs_code", "package_count",
+    ],
+    "customs_liquidation": [
+        "document_number", "document_date", "customs_value", "tax_amount", "total_amount",
+    ],
+    "carrier_invoice": [
+        "supplier_name", "document_number", "document_date", "currency",
+        "net_amount", "tax_amount", "total_amount", "bill_of_lading", "containers",
+    ],
+    "logistics_invoice": [
+        "supplier_name", "document_number", "document_date", "currency",
+        "net_amount", "tax_amount", "total_amount", "bill_of_lading", "containers",
+    ],
+    "broker_invoice": [
+        "supplier_name", "document_number", "document_date", "currency",
+        "net_amount", "tax_amount", "total_amount",
+    ],
+    "unknown": ["supplier_name", "document_number", "document_date", "total_amount"],
+}
+
+FILE_MANUAL = (
+    ("order_number", "Order number"),
+    ("sap_exchange_rate", "Exchange rate you enter"),
+)
+
+PAPER_MANUAL = (
+    ("vendor_code", "Vendor code"),
+    ("posting_date", "Posting date"),
+    ("tax_code", "Tax code"),
+    ("reason_code", "Reason code"),
+    ("gl_account", "G/L account"),
+)
+
+# Broker invoices (Transit Trust and others) carry a different tax code and
+# reason code per service line, not one for the whole paper. Maersk, ONCF,
+# and every other paper type keep the single pair in PAPER_MANUAL above.
+LINE_MANUAL = (
+    ("tax_code", "Tax code"),
+    ("reason_code", "Reason code"),
+)
+
+
+def shown_keys(document: DocumentRecord) -> list[str]:
+    keys = list(COPY_FIELDS.get(document.document_type, []))
+    for key, field in document.fields.items():
+        if key in keys:
+            continue
+        if shown_value(field) not in (None, "") or field.raw_text or field.status == "review":
+            keys.append(key)
+    return [key for key in keys if key in document.fields]
+
+
 FILE_STATUS = {
     "needs_review": "Needs a check",
     "ready_to_export": "Ready to download",
@@ -93,7 +156,7 @@ def pages_text(pages: list[int]) -> str:
 
 
 FAILED_CHECKS = {
-    "lines_sum_to_total": "The lines on the page do not add up to the total.",
+    "lines_sum_to_total": "The lines on the page do not add up to the amount before tax.",
     "net_plus_tax": "Net plus tax does not equal the total.",
     "fob_plus_freight": "FOB plus freight does not equal the total.",
     "supplier_equals_licence": "The supplier total does not match the import licence.",

@@ -19,4 +19,5 @@ def test_dates_and_currency():
     assert parse_date("mardi 8 septembre 2026")[0] == "2026-09-08"
     assert parse_currency("EUR")[0] == "EUR"
     assert parse_currency("DH")[0] == "MAD"
+    assert parse_currency("Dhs")[0] == "MAD"
     assert parse_currency("DIRHAMS")[0] == "MAD"

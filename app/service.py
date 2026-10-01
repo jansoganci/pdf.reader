@@ -75,6 +75,21 @@ def get_dossier(dossier_id: str) -> Dossier | None:
     return db.get_dossier(dossier_id)
 
 
+def set_manual(dossier_id: str, updates: dict[str, str]) -> Dossier:
+    dossier = db.get_dossier(dossier_id)
+    if dossier is None:
+        raise KeyError(dossier_id)
+    for key, value in updates.items():
+        cleaned = value.strip()
+        if cleaned:
+            dossier.manual[key] = cleaned
+        else:
+            dossier.manual.pop(key, None)
+    db.update_current(dossier, dossier.export_with_errors)
+    log.info("manual dossier=%s keys=%s", dossier_id, ",".join(updates))
+    return dossier
+
+
 def correct_field(dossier_id: str, document_id: str, field_name: str, user_value: str, note: str = "") -> Dossier:
     dossier = db.get_dossier(dossier_id)
     if dossier is None:
