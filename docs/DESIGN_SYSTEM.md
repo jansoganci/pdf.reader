@@ -1,5 +1,10 @@
 # Design system — visual language for the review screen
 
+> **Superseded.** The palette, type, radii, and component styles below (Inter,
+> indigo, soft shadowed cards, pastel status tints, pill tags) are the first
+> pass and are replaced by `docs/design.md` §5 and §7. They are kept here as
+> the record of what `app/ui/main.py` currently ships, until the re-skin lands.
+
 This is the visual redesign that follows `docs/UI_REVIEW.md`. That document
 fixed *what's on the screen and where* (one paper at a time, its page beside
 two groups, one Save, one export). This document fixes *what it looks like*:

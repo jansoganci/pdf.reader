@@ -3,17 +3,17 @@
 How the Import dossier reader looks, sounds, and behaves — and why. This is the
 rulebook to check a change against before it ships.
 
-It sits on top of two documents that already exist and does not repeat them:
+It sits next to documents that already exist:
 
 | Document | Answers | Status |
 |---|---|---|
 | `docs/UI_REVIEW.md` | What is on the screen and where | Layout decisions; partly superseded (see §10) |
-| `docs/DESIGN_SYSTEM.md` | Which hex, size, and radius | Implemented in `app/ui/main.py` |
-| **this file** | Why, what each thing means, and the rules for new work | Source of intent |
+| `docs/DESIGN_SYSTEM.md` | The first visual pass: Inter, indigo, soft cards | **Superseded by §5 and §7 of this file** |
+| **this file** | Intent, rules, palette, components | Source of truth |
 
 If this file and the CSS disagree about a *value*, the CSS in `app/ui/main.py`
-wins and this file is stale. If they disagree about a *rule*, this file wins and
-the code is a bug. §10 lists every disagreement found today.
+is stale until it is updated to match. If they disagree about a *rule*, this
+file wins and the code is a bug. §10 lists every disagreement found today.
 
 ---
 
@@ -38,12 +38,15 @@ What this means for the design:
 - **Long sessions, daily.** Comfortable density, no novelty, nothing that
   demands attention without a reason.
 
-**Personality: a careful second pair of eyes.** Calm, exact, plain-spoken. It
-points at the thing worth a look and otherwise stays out of the way.
+**Personality: an accountant's desk.** The paper is on the left. The tools are a
+ballpoint pen, a highlighter, a red pen, and a ruled ledger. The screen marks
+things the way a careful person marks a paper: a highlighter stroke for "look at
+this", red ink for "this stops the job", a plain tick for "checked". Everything
+else is quiet.
 
-**It is not:** an AI product. No sparkle, no "magic", no assistant voice, no
-confidence meter, no progress theatre. The model is plumbing. The screen talks
-about *papers and values*, never about *the AI*.
+**It is not:** an AI product, and it must not look like one. No sparkle, no
+"magic", no assistant voice, no confidence meter — and none of the visual
+habits that mark a generated interface (§2, principle 9, and the list in §5.1).
 
 ---
 
@@ -64,9 +67,9 @@ the PR.
    Status is exactly `high`, `review`, or `missing` (`docs/ARCHITECTURE.md`).
    *Test: could any pixel on screen be read as a confidence the system doesn't have?*
 
-3. **Quiet by default; color means "look here".**
+3. **Quiet by default; marks mean "look here".**
    `high` has no decoration at all. Only `review`, blocking errors, and the
-   dossier state earn color. If most rows are colored, nothing is.
+   dossier state are marked. If most rows are marked, nothing is.
    *Test: squint at a healthy dossier — is the screen almost entirely neutral?*
 
 4. **One thing at a time.**
@@ -74,8 +77,9 @@ the PR.
    area. No second place to do the same job.
    *Test: for any action, is there exactly one button for it on screen?*
 
-5. **State is never color alone.**
-   Every status ships a word, and tier status also ships an icon or dot shape.
+5. **State is never colour alone.**
+   Every status ships a word, and the word sits on a shape (a filled chip or a
+   badge with a glyph).
    *Test: view it in greyscale — can you still tell good, check, and blocked apart?*
 
 6. **Stable places.**
@@ -91,6 +95,13 @@ the PR.
    escaped before it touches HTML. It is the same rule as `AGENTS.md`'s
    "untrusted documents", applied to pixels.
    *Test: does any `unsafe_allow_html=True` string contain text that came from a PDF?*
+
+9. **Nothing that says "generated".**
+   If a screenshot could belong to any SaaS template, it fails. The look comes
+   from the job (paper, ledger, pen marks), not from a component-library
+   default. The banned list is in §5.1.
+   *Test: remove the logo and the copy — is there any detail that is here only
+   because it is the usual thing to put there?*
 
 ---
 
@@ -122,8 +133,8 @@ field adds its name there. Do not put a user-facing string in `main.py` that
 - Pages: `Page 3`, `Pages 2–3`, `Pages 2, 4`.
 - Dates: shown as the paper prints them in *Printed text*; the *Value* column
   carries the normalized form. Never reformat the printed text.
-- Empty is empty. The card summary says `Not read` only where a whole figure is
-  absent from a card; a field row stays blank.
+- Empty is empty. A totals figure says `Not read` only where a whole figure is
+  absent; a field row stays blank.
 
 **Language.** The screen is English today. `UI_REVIEW.md` §7 recommends French
 (the papers are French, SAP may be French). That decision is still open — see
@@ -135,90 +146,139 @@ field adds its name there. Do not put a user-facing string in `main.py` that
 ## 4. Status language
 
 The single most important table in this document. Every status in the data maps
-to one visual tier, one word, one shape.
+to one tier, one word, one mark.
 
-| Tier | Meaning | Word | Shape | Data source |
+| Tier | Meaning | Word | Mark | Data source |
 |---|---|---|---|---|
-| **good** | Ready, check passed | `Ready to download` | circle-check icon / dot | no failed validation |
-| **warn** | Worth a second look, does not block | `Needs a check` | triangle icon / dot | field `review`; validation `severity: warning`; boundary `review` |
-| **crit** | Blocks the download | `Blocks download` | circle-x icon / dot | validation `severity: error`, `status: failed` |
+| **good** | Ready, check passed | `Ready to download` | green chip (header) / tick badge (banner) | no failed validation |
+| **review** | Worth a second look, does not block | `Needs a check` | highlighter chip / exclamation badge | field `review`; validation `severity: warning`; boundary `review` |
+| **crit** | Blocks the download | `Blocks download` | red chip / cross badge | validation `severity: error`, `status: failed` |
 | *(none)* | Read and consistent | — | no decoration | field `high` |
 | *(none, see §11)* | Not on the page | — | blank value | field `missing` |
+
+The tier is called **review** in the visual layer (the highlighter), because
+that is what it means. Code that still says `warn` maps to it one to one.
 
 Rules:
 
 - **`high` is silent.** It is the normal state; marking it dilutes everything else.
 - **Tier follows severity, not volume.** One blocking error makes the dossier
-  `crit` regardless of how many warnings exist.
-- **Dossier state is a pill in the header; item state is a tag on the row.**
-  Never put a banner where a tag will do.
+  `crit` regardless of how many `review` items exist.
+- **Dossier state is a chip in the header; item state is a chip on the row.**
+  Same chip, same words. Never put a banner where a chip will do.
 - **A blocked export is overridable by a person, not by the app.** The override
   is an explicit, stored choice (`export_with_errors`).
-- **Two word forms per tier, used consistently:** header pill (`Needs a check`),
-  row tag (`Needs a check`), banner sentence (count + consequence).
+- **The words don't change between places:** header chip, row chip, and banner
+  sentence use the same tier words.
 
 ---
 
 ## 5. Visual foundations
 
-Values are in `docs/DESIGN_SYSTEM.md` and `app/ui/main.py`. This section is
-*which token for which job*.
+### 5.1 What this must not look like
 
-### Color roles
+These are the habits of generated interfaces. They are banned, not discouraged.
+Each has a replacement.
 
-| Job | Token | Never use for |
+| Banned | Why | Instead |
 |---|---|---|
-| Page ground | `--bg` | cards |
-| Raised content (cards, form panel, inputs) | `--surface` | page ground |
-| Footer-ish strips, header strip | `--surface-sunken` | text backgrounds in dark mode (it equals `--bg` there) |
-| Primary text, values | `--ink` | captions |
-| Labels, captions, printed text | `--ink-secondary` | — |
-| Hints that repeat something visible | `--ink-muted` | any value the clerk must read (2.6:1 in light) |
-| The one action on a screen, selected state, focus | `--accent` | status |
-| Links / text on bare ground | `--accent-text` | fills |
-| Status | `--{good,warn,crit}-{text,bg,strong}` | decoration, emphasis |
-| Hairlines | `--border` | the only cue that something is an input (see §8) |
+| **A coloured bar on one side of a box** (`border-left: 4px solid …`) | The tell of a generated callout. It also breaks: on a rounded box the bar curves into a **crescent** (seen in the live app on the banner). Never fix it by tweaking the radius — remove the pattern. | A badge with a glyph at the start of the line; text stays ink. |
+| **Pastel tint + same-hue dark text** for status | The default "alert" recipe. Low-contrast pairs, and every status looks like every other app's. | Ink text on paper. Colour lives in the badge or chip only. |
+| **Indigo / violet accent**, blue-to-purple gradients | The most common generated accent. | Ballpoint blue (§5.2) for actions only. |
+| **Slate / zinc / grey-blue neutral scale** | The default Tailwind-style neutrals. | Warm paper neutrals (§5.2). |
+| **Inter** (and Roboto, system-ui as the identity) | The default font of generated UIs. | IBM Plex Sans + IBM Plex Mono. |
+| **Pill-shaped everything; big soft radii (14–20px)** | Friendly-SaaS shorthand. | Small, firm radii: 3 / 4 / 6px. |
+| **Floating cards with drop shadows** | Depth as decoration. | Flat. Rules and ground steps separate things. No shadow tokens exist. |
+| **A dot before the label** inside a status chip | Filler. | A filled chip; the fill is the signal. |
+| **Emoji or icon-in-a-tinted-square as a logo** | Placeholder branding. | A plain wordmark: the product name in type. |
+| **Boxed stat cards in a row** | The dashboard template. | A ruled totals strip (§7). |
+| **Gradients, glass, glow, sparkle, illustration** | Decoration with no job. | Nothing. |
 
-There is one accent. Indigo means "you can act here" and "this is selected". It
-never means a status. Status never uses indigo.
+When adding anything new, check it against this table first.
 
-### Type
+### 5.2 Palette — "paper, ink, and three pens"
 
-One family: **Inter**, fallback system sans. Weight does the work; no serif, no
-italics. Tabular figures on, globally, so every amount column aligns.
+Names are the job, not the hue. Light is the default; dark is built on purpose,
+not inverted. Contrast is WCAG relative luminance, computed (§8).
 
-| Role | Size / line · weight | Used for |
-|---|---|---|
-| Page title | 26 / 32 · 700 | `st.header` |
-| Paper title | 20 / 28 · 600 | `st.subheader` per paper |
-| Card amount | 22 · 700 | summary tile figure |
-| Value / body | 15 / 22 · 500 | inputs, button labels, row values |
-| Field label | 14 / 20 · 500 | row labels |
-| Caption | 13 / 18 · 400 | page counts, printed text, hints |
-| Group label | 12 / 16 · 600 · caps · +0.06em | `COPIED FROM THE PAGE`, `YOU TYPE` |
-| Tag | 12 · 600 | status tags |
+| Token | Light | Dark | Job |
+|---|---|---|---|
+| `bg` | `#eeece5` | `#101216` | Page ground (the desk) |
+| `surface` | `#fbfaf6` | `#181b21` | Paper: panels, inputs, banners, totals |
+| `surface-sunken` | `#e6e3da` | `#0c0e11` | The header strip |
+| `rule` | `#d9d5c9` | `#2a2e37` | Hairlines between rows and sections. Decorative |
+| `edge` | `#8a8578` | `#7b8394` | Borders of controls (inputs, secondary buttons). 3.5:1 / 4.5:1 |
+| `ink` | `#16181d` | `#ecebe6` | Text and values |
+| `ink-secondary` | `#4a4d55` | `#a9adb8` | Labels, captions, printed text, placeholders |
+| `accent` | `#1f3d8f` | `#3d62c8` | Ballpoint blue: the one action (primary fill, selected tab, focus) |
+| `accent-hover` | `#17306f` | `#2f52b0` | Primary hover |
+| `accent-text` | `#1f3d8f` | `#9db4f2` | Accent-coloured text on bare ground |
+| `on-accent` | `#ffffff` | `#ffffff` | Label on accent fills |
+| `review-fill` | `#f2d144` | `#e3c53c` | The highlighter: `Needs a check` chip, badge |
+| `on-review` | `#16181d` | `#16181d` | Text/glyph on review fill (11.8:1 / 10.4:1) |
+| `review-text` | `#7a5b00` | `#e3c53c` | A review word set on bare ground (rare) |
+| `crit-fill` | `#a3231b` | `#e2635a` | The red pen: `Blocks download` chip, badge |
+| `on-crit` | `#ffffff` | `#1a0a09` | Text/glyph on crit fill (7.5:1 / 5.7:1) |
+| `crit-text` | `#a3231b` | `#e2635a` | A crit word on bare ground |
+| `good-fill` | `#2d6a3e` | `#5bb273` | The tick: `Ready to download` chip, badge |
+| `on-good` | `#ffffff` | `#08170d` | Text/glyph on good fill (6.5:1 / 7.1:1) |
+| `good-text` | `#2d6a3e` | `#5bb273` | A good word on bare ground |
 
-Nothing below 12px. (The header status pill is 11.5px today — see §10.)
+Rules:
 
-### Space, shape, depth
+- **One action colour.** Ballpoint blue means "you can act here" and "this is
+  selected" — nothing else. The three pens mean status — nothing else.
+- **Text on a status is always `on-*` on its fill.** Banner and row sentences
+  stay in `ink` on `surface`. Status colour is never the colour of a sentence.
+- **`review-text` is rare.** Prefer the chip.
+- **Dark mode is not an inversion.** Fills are lighter so they hold on a dark
+  desk, and their `on-*` text flips to dark where white would fail.
 
-- 4px base; the working range is 16–24 for card padding and between field rows,
-  4–8 for icon-to-label gaps.
-- Radius scales with size: 10 (tags, inputs) · 14 (buttons) · 20 (cards, panels,
-  banners) · pill (header status, dots).
-- Light mode lifts with soft shadow; dark mode lifts with a lighter surface and a
-  hairline. The form panel is the one `--shadow-md` element — it is the thing
-  being worked on.
-- No gradients. No decorative imagery. No illustration. No emoji.
+### 5.3 Type
 
-### Icons
+Two families, each with a reason:
+
+- **IBM Plex Sans** — everything the app says and everything the clerk edits.
+- **IBM Plex Mono** — the *Printed text* column and nothing else. Mono means
+  "this is exactly what the paper said". It is how the eye tells copied from
+  typed.
+
+Tabular figures on, globally, so every amount column aligns. No italics.
+
+| Role | Size / line · weight | Family | Used for |
+|---|---|---|---|
+| Page title | 26 / 32 · 600 · −0.01em | Sans | `st.header` |
+| Paper title | 20 / 28 · 600 | Sans | `st.subheader` per paper |
+| Figure | 22 / 28 · 600 | Sans | totals strip |
+| Body / value | 15 / 22 · 400 (inputs 500) | Sans | inputs, banner sentences, button labels (600) |
+| Field label | 14 / 20 · 500 | Sans | row labels |
+| Group title | 13 / 18 · 600, sentence case | Sans | `Copied from the page`, `You type`, over a 1px `rule` |
+| Caption | 13 / 18 · 400 | Sans | page counts, hints, sub-lines |
+| Printed text | 13 / 18 · 400 | **Mono** | the paper's own words |
+| Chip | 12 / 16 · 600 | Sans | status chips |
+
+Nothing below 12px. No uppercase tracking-out for labels.
+
+### 5.4 Space, shape, depth
+
+- 4px base; the working range is 16–24 for panel padding and between field
+  rows, 4–8 for icon-to-label gaps.
+- **Radius is small and firm:** 3px (chips, inputs) · 4px (buttons) · 6px
+  (panels, banners). Nothing is a pill.
+- **No elevation.** There are no shadow tokens. A panel is a `surface` with a
+  1px `rule`; the page is the `bg` around it. In dark the same.
+- Lines do the work of structure: a rule under a group title, a rule between
+  field rows, a rule between totals — like a ledger.
+
+### 5.5 Icons
 
 Inline SVG, 16×16, 1.75 stroke, round caps, `currentColor`. Four meanings only:
-good (circle-check), warn (triangle), crit (circle-x), page navigation
-(chevrons — Streamlit's Material chevrons). No icon font, no new dependency. An
-icon is never the only carrier of a meaning (principle 5).
+tick (good), exclamation (review), cross (crit), page navigation (chevrons —
+Streamlit's Material chevrons). Status icons sit in a **square badge** (20px,
+3px radius, filled with the tier's `*-fill`, glyph in `on-*`). No icon font, no
+new dependency. An icon is never the only carrier of a meaning (principle 5).
 
-### Motion
+### 5.6 Motion
 
 None designed. Streamlit reruns repaint the page; do not add transitions to hide
 that. The only waiting state is the reading screen, which says how long it takes
@@ -254,20 +314,22 @@ percentage, no streaming of partial results.
 
 ```
 ┌ header ───────────────────────────────────────────────────────────┐
-│ [mark] Import file                                [Read another]   │
-│        maroc-import-document.pdf · 8 papers read · (Needs a check) │
+│ Import file                                      [Read another]    │
+│ maroc-import-document.pdf · 8 papers read · [Needs a check]        │
 ├ strip ────────────────────────────────────────────────────────────┤
-│ Order number [ ]  Exchange rate you enter [ ]  (i)                 │
+│ Order number [ ]  Exchange rate you enter [ ]  (not on any page)   │
 ├───────────────────────────────────────────────────────────────────┤
 │ Export:  [Download CSV] [Download JSON]    ← or the override box   │
-│ ▌ banner: dossier state in one sentence       [Show passed checks] │
-│ ┌ card ┐ ┌ card ┐ ┌ card ┐ ┌ card ┐   summary figures              │
+│ [!] banner: dossier state in one sentence    [Show passed checks]  │
+│ ── Supplier invoice ─┬─ Customs value ─┬─ Customs payment ─┬─ … ── │
+│  18,921.09 EUR       │ 210,800.00 MAD  │ 44,004.00 MAD     │        │
+│  Issued by …         │ Copied from…    │ [Needs a check]   │ totals │
 │ ── tab: Broker ── Customs payment • ── Shipping invoice ── …       │
 │ ┌ page image (sticky) ────────────┐ ┌ form panel ───────────────┐ │
-│ │ ‹  Page 3 · 2 of 2  ›            │ │ COPIED FROM THE PAGE      │ │
+│ │ ‹  Page 3 · 2 of 2  ›            │ │ Copied from the page ──── │ │
 │ │                                  │ │ Field | Value | Printed   │ │
-│ │                                  │ │ LINES …                   │ │
-│ │                                  │ │ YOU TYPE                  │ │
+│ │                                  │ │ Lines …                   │ │
+│ │                                  │ │ You type ──────────────── │ │
 │ │                                  │ │ [ Save ]                  │ │
 │ └──────────────────────────────────┘ └───────────────────────────┘ │
 │ paper-level banners · Join / Split                                  │
@@ -283,79 +345,79 @@ Rules for this screen:
   eye returns to. It opens on the page of the first `review` field.
 - **Papers are tabs.** A bullet prefix marks a paper that needs a check, so the
   flag is visible without opening it.
-- **The form panel is the only elevated surface** besides summary cards, and it
-  holds exactly two groups: *Copied from the page* and *You type*. One Save
-  commits both.
+- **The form panel holds exactly two groups:** *Copied from the page* and
+  *You type*. One Save commits both.
 - **Dossier-level typed values (order number, exchange rate) live in the strip**
   — present, small, out of the way until needed.
 - **Unsaved edits survive a tab switch.** Switching papers must not drop a
   value typed or corrected but not yet saved.
+- **The header is a wordmark, not a logo tile.** The product name in type, the
+  file name and count beneath, the dossier chip beside them.
 
 ---
 
 ## 7. Components
 
-Each: what it is, states, the one rule that matters. Class names are in
-`app/ui/main.py`. The Streamlit hook is the selector the CSS owns.
+Each: what it is, states, the one rule that matters. The Streamlit hook is the
+selector the CSS owns. The class names below are the targets for `main.py`.
 
 | Component | Anatomy | States | Rule |
 |---|---|---|---|
-| **Banner** `.banner.{good,warn,crit}` | icon + one sentence, tier bg, 4px tier bar, radius-lg | good / warn / crit | One sentence. Count + consequence. Never two banners for the same fact. |
-| **Status tag** `.tag.{warn,crit}` | dot + word, radius-sm | warn / crit | Goes after the label it qualifies, inside the row. Always the word. |
-| **Status pill** `.status-pill.{good,warn,crit}` | dot + word, fully round | good / warn / crit | Header only: dossier state. |
-| **Summary card** `.card` | label · amount · issuer line · optional tag | normal / needs check | Figures only. One card per kind; the paper list remains the full inventory. |
-| **Field row** | label (+tag) · value input · printed text | normal / review / edited-unsaved | Printed text is read-only and never reformatted. Value input starts pre-filled with the current value. |
-| **Group title** `.group-title` | 12px caps, secondary ink | — | Exactly two per panel. |
-| **Form panel** `stForm` | surface, radius-lg, shadow-md, 24px pad | — | One submit. |
-| **Button – primary** | accent fill, white label, radius-md | rest / hover / disabled | One primary per view region: `Read this PDF`, `Save`, `Download JSON`. |
-| **Button – secondary** | surface fill, hairline, ink label | rest / hover / disabled | Everything else. Ghost is deliberately merged into secondary. |
-| **Text input** | surface, hairline, radius-sm, 15/500 | rest / focus / disabled | Focus is the loud state: accent border + 3px halo. |
-| **Page nav** | chevron button · `Page N · i of n for this paper` · chevron | first / middle / last (end disabled) | Only when a paper spans >1 page. |
-| **Tab** | label, equal width, accent underline | rest / selected | Label = paper name; `•` prefix = needs check. |
+| **Banner** | `surface`, 1px `rule`, 6px radius · 20px square badge + one ink sentence | good / review / crit (badge only differs) | One sentence, count + consequence. **No side bar, no tint.** Never two banners for the same fact. |
+| **Status chip** | filled `*-fill`, `on-*` word, 3px radius, 12/600 | review / crit / good | Goes after the label it qualifies, or in the header for the dossier. Always the word. No dot. |
+| **Totals strip** | one row, up to four cells divided by 1px `rule`; label · figure · sub-line · optional chip | normal / needs check | Figures only, no boxes, no shadow. One cell per kind; the tabs remain the full inventory. |
+| **Field row** | label (+chip) · value input · printed text in mono | normal / review / edited-unsaved | Printed text is read-only, mono, never reformatted. The value input starts pre-filled with the current value. |
+| **Group title** | 13/600 sentence case over a 1px `rule` | — | Exactly two per panel. |
+| **Form panel** | `surface`, 1px `rule`, 6px radius, 24px pad | — | One submit. Flat. |
+| **Button – primary** | `accent` fill, `on-accent` label, 4px radius | rest / hover / disabled | One primary per region: `Read this PDF`, `Save`, `Download JSON`. |
+| **Button – secondary** | `surface`, 1px `edge`, `ink` label | rest / hover / disabled | Everything else. There is no third variant. |
+| **Text input** | `surface`, 1px `edge`, 3px radius, 15/500 | rest / focus / disabled | Focus: border `accent` + 2px solid `accent` outline with 1px offset. |
+| **Page nav** | chevron button · `Page N · i of n for this paper` · chevron | first / middle / last (end disabled) | Only when a paper spans more than one page. |
+| **Tab** | label, equal width, 2px `accent` underline on selected | rest / selected | Label = paper name; `•` prefix = needs check. |
+| **Wordmark** | product name, 20/600, `ink` | — | Plain type. No tile, no emoji. |
 
 New components: build from these first. If a genuinely new one is needed, add it
-here with anatomy, states, and a rule before it lands in `main.py`.
+here with anatomy, states, and a rule — and check §5.1 — before it lands in
+`main.py`.
 
 ---
 
 ## 8. Accessibility
 
 Contrast, computed (WCAG relative luminance). Floor: 4.5:1 text, 3:1 for
-non-text marks that carry meaning (borders of controls, focus rings, status
-dots/bars, icons).
-
-**Passes**
+non-text marks that carry meaning (control borders, focus rings, icons).
 
 | Pair | Light | Dark |
 |---|---|---|
-| `ink` on `surface` | 17.7 | 16.1 |
-| `ink-secondary` on `surface` | 7.7 | 6.9 |
-| white on `accent` | 6.3 | 6.3 |
-| `accent-text` on `surface` | 6.3 | 8.9 |
-| `good-text` / `warn-text` / `crit-text` on own bg | 6.5 / 6.4 / 6.8 | 8.9 / 9.5 / 6.2 |
+| `ink` on `surface` | 17.0 | 14.5 |
+| `ink` on `bg` | 15.0 | 15.7 |
+| `ink-secondary` on `surface` / `bg` / `surface-sunken` | 8.1 / 7.2 / 6.6 | 7.7 / 8.4 / 8.6 |
+| `on-accent` on `accent` | 9.9 | 5.6 |
+| `accent-text` on `surface` / `bg` | 9.5 / 8.4 | 8.4 / 9.2 |
+| `on-review` on `review-fill` | 11.8 | 10.4 |
+| `on-crit` on `crit-fill` | 7.5 | 5.7 |
+| `on-good` on `good-fill` | 6.5 | 7.1 |
+| `crit-text` / `good-text` / `review-text` on `surface` | 7.2 / 6.2 / 6.1 | 5.1 / 6.6 / 10.1 |
+| `edge` (control border) on `surface` / `bg` | 3.5 / 3.1 | 4.5 / 4.9 |
+| Focus ring (`accent` / `accent-text`) on `surface` | 9.5 | 8.4 |
 
-**Misses, found while writing this** — none is blocking the job, all are cheap:
+Notes:
 
-| # | Where | Value | Why it matters | Fix |
-|---|---|---|---|---|
-| A1 | Light `--warn-strong` (#f59e0b) bar/dot on `--warn-bg` | **1.9:1** | The warn banner's left bar and tag dot almost disappear. The word saves it; the shape doesn't. | `--warn-strong` light → `#b45309` (4.5:1) |
-| A2 | Dark focus ring: `--accent` on `--surface` | **2.8:1** | Focus is the most-used state in a data-entry tool, and it's under 3:1 in dark. | Dark focus border → `--accent-text` (8.9:1) |
-| A3 | Input boundary: `--border` on `--surface` | 1.2:1 | The input is found by its label and halo, not its edge. Accepted in `DESIGN_SYSTEM.md` §8; reconsider for a tool whose whole job is typing into boxes. | Add `--border-strong` for inputs only: light `#8b8b93` (3.4), dark `#71717a` (3.7) |
-| A4 | `--ink-muted` placeholder and the `i` glyph | 2.6 light | Placeholder is the only explanation of some boxes. | Use `--ink-secondary` for the strip hint; keep muted for truly redundant cues |
-| A5 | Header status pill 11.5px | — | Below the 12px floor, and it carries the dossier state. | 12px |
-| A6 | Crit dot on crit bg, light | 3.95 | Passes 3:1; noted so it isn't "fixed" the wrong way. | none |
-
-Other rules:
-
-- **Keyboard:** the form must submit with Enter from any field; tab order
-  follows reading order (page nav → fields → Save). Streamlit's focus handling
-  is the baseline; don't `tabindex` around it.
+- `rule` is decorative (1.3–1.4:1). It never carries meaning on its own; a
+  control is found by its `edge` and its label.
+- A chip's fill against the paper is not relied on: the word inside the chip is
+  the signal and meets the table above.
+- The old palette's misses (a 1.9:1 warn bar, a 2.8:1 dark focus ring, 1.2:1
+  input edges, 2.6:1 muted ink, an 11.5px pill) are gone by construction. The
+  banner bar that caused them is banned (§5.1).
+- Status survives greyscale: word on a chip or badge, glyph in the badge.
+- **Keyboard:** the form submits with Enter from any field; tab order follows
+  reading order (page nav → fields → Save). Don't `tabindex` around Streamlit.
 - **Targets:** buttons ~40px tall; do not shrink for density.
-- **Themes:** light and dark are both first-class and driven by
-  `prefers-color-scheme`, with a `[data-theme]` override ready for a toggle.
-  Every text color must name the ground it sits on. The start-screen bug in
-  `UI_REVIEW.md` §3 (light text on a forced light ground) is the failure mode
-  to prevent: whenever you set a ground, set its ink in the same rule.
+- **Themes:** light and dark are both first-class, driven by
+  `prefers-color-scheme`, with a `[data-theme]` override ready. Whenever you set
+  a ground, set its ink in the same rule — the start-screen bug in
+  `UI_REVIEW.md` §3 is what happens otherwise.
 - **Reduced motion:** nothing animates, nothing to reduce.
 
 ---
@@ -373,15 +435,20 @@ The constraints are part of the design. Work with them.
   themes before merging.
 - **Use native widgets** (`text_input`, `form`, `tabs`, `columns`, `status`,
   `download_button`) and restyle them. Reach for `unsafe_allow_html` only for
-  banners, tags, cards, and the header — and escape every interpolated value
-  with `html.escape` if it can originate in a PDF (principle 8).
+  banners, chips, the totals strip, and the header — and escape every
+  interpolated value with `html.escape` if it can originate in a PDF
+  (principle 8).
+- **Streamlit's own styling leaks.** Its default theme carries the very look
+  §5.1 bans (rounded inputs, grey-blue neutrals). Every widget we show must have
+  its ground, ink, border, and radius set by our tokens; a widget we haven't
+  restyled is a bug to find, not a default to accept.
 - **No business logic here** (`AGENTS.md`). The screen calls `app/service.py`.
   Labels, sentences, and ordering come from `app/ui/words.py`. Rules and tiers
   come from validation results; the UI maps severity to tier, nothing more.
 - **Two button variants only.** Streamlit exposes `primary` and `secondary`;
   a third would need per-button DOM hacks. Don't invent one.
-- **Fonts:** Inter loads from Google Fonts via `@import`. That is a request to an
-  external host from a finance tool; see §11.
+- **Fonts:** IBM Plex Sans and Mono load from Google Fonts via `@import`. That
+  is a request to an external host from a finance tool; see §11.
 - **Fake provider is the default.** Design every state to look right with an
   empty or partial dossier — `missing` fields are the normal case there.
 
@@ -389,20 +456,19 @@ The constraints are part of the design. Work with them.
 
 ## 10. Where the repo disagrees with itself
 
-Found while reading the code against the three docs. Real, small, and worth
-fixing before building on top.
+Found while reading the code against the docs, and from a screenshot of the
+live app. Real, small, and worth fixing before building on top.
 
 | # | Finding | Where | Consequence |
 |---|---|---|---|
 | D1 | **PDF text goes into HTML unescaped.** The summary card's `Issued by {who}` interpolates `supplier_name` (read from the PDF) into a string rendered with `unsafe_allow_html=True`. The filename is escaped; the issuer is not. | `app/ui/main.py` summary cards, `issued_by()` | Violates principle 8 and `AGENTS.md`'s untrusted-documents rule. A crafted issuer name renders as markup. **Fix first.** |
-| D2 | **`design/sample.html` is the old language** — cream ground, serif, rail of papers, black primary. The live app is Inter, white/zinc, indigo, tabs. | `design/sample.html` | A new contributor reads the wrong mock. Update it to the current screen or delete it. |
-| D3 | **`UI_REVIEW.md` still describes a left paper rail.** The app now uses tabs. | `docs/UI_REVIEW.md` §5 | The "keep the rail" decision was reversed without being recorded. |
-| D4 | **`DESIGN_SYSTEM.md` specifies a Ghost button;** the code merged it into secondary and says so. The spec table still lists three. | `docs/DESIGN_SYSTEM.md` §5 | Minor; the status note at the top already explains it. |
-| D5 | **Emoji as the brand mark** (`📄` in the header). Renders differently per OS and breaks "no emoji". | `main.py` header | Replace with an inline SVG page glyph in the same tile. |
-| D6 | **Export area changes shape with state.** Download buttons are swapped for a checkbox when errors block. | `main.py` export block | Breaks principle 6 (stable places). Keep the buttons, disable them, and put the override beside them. |
-| D7 | **Tab-switch persistence is a stated check (`UI_REVIEW.md` §8) with no test.** Fields inside `st.form` keep widget state per key; confirm and cover it. | `main.py` | Risk of silently losing typed values. |
-| D8 | `--surface-sunken` equals `--bg` in dark mode, so the header strip has no tone there. | tokens | Cosmetic; give dark a distinct step. |
-| D9 | **Not checked live.** This pass read the code and docs and computed contrast; it did not run the app with a real extraction, so spacing in the 2:1 preview/fields split (three sub-columns inside the narrow pane) is unverified. | — | Do a visual pass on a real dossier before changing proportions. |
+| D2 | **The banner draws a crescent.** `border-left: 4px solid` on a box with `border-radius: 20px` makes the bar follow the corner. | `.banner` in `main.py` | Visible defect, and the generated-callout look §5.1 bans. Remove the bar; don't re-round it. |
+| D3 | **The whole skin is the generated default** — Inter, indigo, zinc neutrals, pastel-tint status, soft shadowed cards, pill status, dotted tags, emoji brand mark. | `main.py` CSS; `DESIGN_SYSTEM.md` | Replace with §5 and §7 in one pass. |
+| D4 | **`design/sample.html` is an older, third look** — cream ground, serif, rail of papers, black primary. | `design/sample.html` | A new contributor reads the wrong mock. Rebuild it from §6.3 after the re-skin, or delete it. |
+| D5 | **`UI_REVIEW.md` still describes a left paper rail.** The app now uses tabs. | `docs/UI_REVIEW.md` §5 | The "keep the rail" decision was reversed without being recorded. |
+| D6 | **Export area changes shape with state.** Download buttons are swapped for a checkbox when errors block. | `main.py` export block | Breaks principle 6. Keep the buttons, disable them, put the override beside them. |
+| D7 | **Tab-switch persistence is a stated check (`UI_REVIEW.md` §8) with no test.** | `main.py` | Risk of silently losing typed values. |
+| D8 | **Not checked live beyond one screenshot.** Spacing in the 2:1 preview/fields split (three sub-columns inside the narrow pane) is unverified on a real dossier. | — | Do a visual pass on a real dossier before changing proportions. |
 
 ---
 
@@ -411,19 +477,19 @@ fixing before building on top.
 Each needs an answer from the business or the owner. None blocks the work in §12.
 
 1. **Screen language: English or French?** The papers are French; the SAP GUI
-   language is unknown. Argument for French: removes a translation step from
-   the most repeated action. Argument against: the code, docs, and prompts are
-   English and the team may prefer it. Needs the two accountants.
-2. **Self-host Inter, or keep Google Fonts?** `docs/SECURITY.md` is silent about
-   the font request. On a locked-down or offline machine the fallback renders
-   fine but looks different. Shipping one `.woff2` removes the question.
-3. **How should `missing` look?** Today a missing field is a blank input. That
-   is honest, but a blank can also mean "forgot to look". Option: a quiet
-   `Not on the page` caption in the *Printed text* column. Must never become a
-   value, and must never be exported.
+   language is unknown. For French: removes a translation step from the most
+   repeated action. Against: the code, docs, and prompts are English. Needs the
+   two accountants.
+2. **Self-host the fonts, or keep Google Fonts?** `docs/SECURITY.md` is silent
+   about the font request. Shipping two `.woff2` files removes the question and
+   the offline fallback look.
+3. **How should `missing` look?** Today a missing field is a blank input —
+   honest, but a blank can also mean "forgot to look". Option: a quiet
+   `Not on the page` caption in the *Printed text* column. It must never become
+   a value and must never be exported.
 4. **Should user-edited values be marked?** The data keeps `method: user` and
    the original. The screen doesn't show it. Option: a small `Edited` marker in
-   the row so the clerk can see what they changed before Save/export.
+   the row so the clerk sees what they changed before Save/export.
 5. **Per-service-line tax and reason codes** on broker invoices are already in
    the UI; whether Phase 1 keeps them document-level is still an open business
    question (`UI_REVIEW.md` §9).
@@ -435,14 +501,16 @@ Each needs an answer from the business or the owner. None blocks the work in §1
 Smallest first; each is independently shippable and testable.
 
 1. **D1 — escape PDF text in HTML.** Security-class, ~5 lines, one test.
-2. **Token fixes A1, A2, A5** (three one-line changes), and **A3** if the
-   owner accepts a heavier input border.
-3. **D5, D6, D2** — emoji mark → SVG, stable export area, refresh or delete the
-   stale mock.
+2. **D2 + D3 — the new skin, in one pass.** Tokens (§5.2), fonts (§5.3),
+   banner without a bar (§7), chips instead of tags and pills, flat panel,
+   ruled totals strip instead of cards, wordmark instead of the emoji tile,
+   small radii, input `edge` and focus. One PR, checked live in both themes,
+   with a before/after screenshot.
+3. **D6** — stable export area; **D4** — rebuild or delete the stale mock.
 4. **Decisions 3 and 4** — `missing` and `edited` markers (new, small, high
    value for trust).
-5. **Pane proportions** — only after a live look at a real dossier (D9).
+5. **Pane proportions** — only after a live look at a real dossier (D8).
 6. **Language** — once decision 1 is made; then it is a `words.py` job.
 
-Each change updates this file if it changes a rule, `DESIGN_SYSTEM.md` if it
-changes a value, and the screen's tests if it changes behavior.
+Each change updates this file if it changes a rule or a value, and the screen's
+tests if it changes behavior.
