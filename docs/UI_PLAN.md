@@ -230,3 +230,28 @@ alone.
 - `main.py` is a router of under ~60 lines; no file in `app/ui/` over ~200 lines.
 - Only `theme/` has colours and sizes.
 - `docs/design.md` and this file match the code.
+
+## 13. Step 0 results
+
+Run on Python 3.13 with the pinned requirements (`streamlit==1.49.1`).
+
+- **Tests:** 24 passed, before any change.
+- **App:** starts on port 8765 with the fake provider.
+- **Seeded dossier:** the fake provider reads nothing, so the Review screen was
+  seeded with a Maroc-like dossier (8 papers, one failing line-sum check on the
+  Maersk invoice) through a throwaway launcher outside the repo. This becomes a
+  real test fixture in step 4.
+- **"Before" screenshots:** Start and Review, light and dark, kept outside the
+  repo.
+
+Seen on the live screen, beyond what `design.md` already lists:
+
+| # | Finding | Fixed by |
+|---|---|---|
+| F1 | The crescent on the banner is real (`design.md` D2). | step 5 |
+| F2 | The *Field / Value / Printed text* header sits **outside** the form panel and does not line up with its columns. | step 5 (header moves inside the panel) |
+| F3 | In the 1/3-width form column, labels wrap ("Invoice number") and the `Needs a check` tag breaks onto two lines. | step 5, and open decision 2 (width ratio) |
+| F4 | A broker invoice shows seven line rows, each with two boxes, which makes the panel about 1,300px tall. | not in scope; noted for later |
+| F5 | The drop zone says **"Limit 200MB per file"**, but the app limit is 30 MB. It is Streamlit's default text. | step 6; needs CSS or a replacement, since `.streamlit/` is not in the repo |
+| F6 | When a check blocks the download, the export area shows only a checkbox, no buttons (`design.md` D6, deferred). | later |
+| F7 | In this sandbox Google Fonts did not load, so a fallback font rendered. Open decision 1 (self-host) matters. | decision |
