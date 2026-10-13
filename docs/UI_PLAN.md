@@ -330,3 +330,36 @@ and writes one `<style>` element. `main.py` went from about 690 lines to 399.
 
 The old Google Fonts `@import` and the Inter family are still in `tokens.css` on purpose;
 they change with the skin in step 5.
+
+## 16. Step 3 results (done)
+
+**What moved.** Everything in `main.py` that decides *what to show* now lives in two
+modules; `main.py` only draws it (about 690 lines at the start of the plan, 399 after
+step 2, **250 now**).
+
+| Module | Lines | Holds |
+|---|---|---|
+| `app/ui/view.py` | 309 | pure: `build(dossier)` returns frozen `DossierView`, `PaperView`, `RowView`, `LineView`, `CheckView`, `TotalsCell`. The helpers that were in `main.py` (`display`, `headline_amount`, `check_sentence`, `tab_label`, `default_page`, `paper_manual_fields`) moved here unchanged, plus severity to tier (`check_tier`, `dossier_tier`), the banner sentence, and the totals cells. |
+| `app/ui/state.py` | 110 | every `st.session_state` entry and every widget key, spelled once |
+
+`view.py` imports neither Streamlit nor the service (a test checks it).
+
+**Test data.** `tests/ui_fixtures.py` builds the Maroc-like dossier (8 papers, optional
+blocking error) so tests and the browser checks use the same data. It will also feed the
+`AppTest` smoke tests in step 4.
+
+**Checks.** Tests went from 48 to 82. Behaviour was checked in a real browser before and
+after the move, with the same script: it opens all 8 tabs, steps a two-page paper back
+one page, switches tabs and returns, types a value without saving and switches tabs,
+toggles *Show passed checks*, corrects a total and presses Save.
+
+- The recorded results are **identical** (page labels, the remembered page, the typed
+  value surviving a tab switch, the toggle, the corrected total `44,004.00 MAD` to
+  `50,000.00 MAD`, the open tab after Save).
+- 8 of 9 screenshots are pixel-identical. The ninth (after Save) differs in 91 pixels
+  along input borders; the content is the same, so this looks like anti-aliasing.
+- The hostile-dossier probe from step 1 is still clean.
+
+**Settled.** `design.md` D7 (does a typed but unsaved value survive switching papers?)
+**does hold today**, and the widget keys that make it hold are now fixed in `state.py` and
+covered by a test that pins their spelling.
