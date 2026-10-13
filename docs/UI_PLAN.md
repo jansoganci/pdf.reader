@@ -1,5 +1,8 @@
 # UI plan — new skin, clean structure
 
+> **Status: done (steps 0 to 7).** Sections 0 to 12 are the plan as agreed; sections 13 to 20 record
+> what each step did and how it was checked.
+
 Draft for review. Nothing here is built yet. The look is fixed by `docs/design.md`;
 this file decides **how the code is organised and in what order it is built**.
 
@@ -467,3 +470,31 @@ while rows and totals say "Needs a check". `design.md` section 4 says a flagged 
 the dossier `warn`. This is a behaviour change, so it is left for a decision.
 
 **Not touched, by plan**: D6, the export area still swaps its buttons for the override box.
+
+## 20. Step 7 results (done): D9 and the clean-up
+
+**D9 fixed.** The dossier state in the header (and the banner under it) now counts values in
+`review`. `view.dossier_tier` is `crit` for a failed check with severity `error`, `warn` for any
+other failed check *or any value in `review`*, and `good` only when neither exists. With no
+failed check the banner counts values: `3 value(s) might need a second look before you
+download.` With failed checks it keeps counting checks. In the browser, the sample dossier
+(three flagged totals, all checks passing) used to say `Ready to download` and now says
+`Needs a check`. Tests: 120 to 125 (the new ones cover one flagged value, flagged values with
+a failed check, and a blocking error winning).
+
+**Clean-up**
+
+- `docs/DESIGN_SYSTEM.md` is deleted (replaced by `docs/design.md`).
+- `design/sample.html` is replaced by a page **generated** by `design/build_sample.py` from the
+  real components, view data and theme CSS, so it cannot drift. Two tests: the committed file
+  must equal a fresh build, and it must contain the new components and none of the old look.
+  (Tests 125 to 127.)
+- `docs/design.md`: the document table, the fonts note (now in the repo), the status of every
+  finding D1 to D9, the open-decision list and the order of work are brought up to date.
+- `docs/UI_REVIEW.md` gets a short history note at the top; its text is kept as written.
+- Not touched, by decision: D6 (the export area swaps its buttons for the override box), the
+  `missing` and `edited` markers, French labels, and the check against a real dossier.
+
+**Whole-plan check.** 127 tests pass. The scripted browser tour (8 tabs, page stepping, an
+unsaved value surviving a tab switch, show passed checks, correcting a total and saving) gives
+the same behaviour log as at step 3.

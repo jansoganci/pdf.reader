@@ -30,11 +30,41 @@ def test_a_dossier_with_only_a_warning_is_warn():
 
 
 def test_a_clean_dossier_is_good():
-    dossier = maroc_dossier()
+    dossier = maroc_dossier(flag_review=False)
     assert [item for item in dossier.validation if item.status == "failed"] == []
     screen = view.build(dossier)
     assert screen.tier == "good"
     assert screen.banner_text == "Ready to download."
+
+
+def test_values_in_review_make_the_dossier_warn_even_when_every_check_passes():
+    # The sample file flags three totals; its checks all pass. The header must not say "ready".
+    dossier = maroc_dossier()
+    assert [item for item in dossier.validation if item.status == "failed"] == []
+    screen = view.build(dossier)
+    assert view.review_count(dossier) == 3
+    assert screen.tier == "warn"
+    assert screen.blocking_count == 0
+    assert screen.banner_text == "3 value(s) might need a second look before you download."
+
+
+def test_one_flagged_value_is_enough_to_warn():
+    dossier = maroc_dossier(flag_review=False)
+    dossier.documents[0].fields["total_amount"].status = "review"
+    assert view.build(dossier).tier == "warn"
+
+
+def test_a_failed_warning_check_is_counted_before_flagged_values():
+    dossier = maroc_dossier()
+    dossier.validation = [
+        ValidationResult(rule_id="supported_currency", severity="warning", status="failed", message="x")
+    ]
+    assert view.build(dossier).banner_text == "1 item(s) might need a second look before you download."
+
+
+def test_a_blocking_error_is_still_crit_when_values_are_flagged_too():
+    screen = view.build(maroc_dossier(maersk_last_line="1500.00"))
+    assert screen.tier == "crit" and screen.blocking_count == 1
 
 
 def test_severity_decides_the_tier_of_one_check():

@@ -7,13 +7,15 @@ It sits next to documents that already exist:
 
 | Document | Answers | Status |
 |---|---|---|
-| `docs/UI_REVIEW.md` | What is on the screen and where | Layout decisions; partly superseded (see §10) |
-| `docs/DESIGN_SYSTEM.md` | The first visual pass: Inter, indigo, soft cards | **Superseded by §5 and §7 of this file** |
+| `docs/UI_REVIEW.md` | What was wrong with the first screen, and the layout it led to | History; the paper rail it describes became tabs (§6.3) |
+| `docs/UI_PLAN.md` | How the code is organised, and how it was built, step by step | Done: steps 0 to 7 |
+| `design/sample.html` | A picture of the review screen | Generated from the real components and theme; never edit by hand |
 | **this file** | Intent, rules, palette, components | Source of truth |
 
-If this file and the CSS disagree about a *value*, the CSS in `app/ui/main.py`
-is stale until it is updated to match. If they disagree about a *rule*, this
-file wins and the code is a bug. §10 lists every disagreement found today.
+The values live in `app/ui/theme/tokens.css`; this file names what each one is for. If the
+two disagree about a *value*, update whichever is stale and the tests in
+`tests/unit/test_design_rules.py` will tell you if a rule broke. If they disagree about a
+*rule*, this file wins and the code is a bug. §10 lists what was found and what is still open.
 
 ---
 
@@ -447,8 +449,11 @@ The constraints are part of the design. Work with them.
   come from validation results; the UI maps severity to tier, nothing more.
 - **Two button variants only.** Streamlit exposes `primary` and `secondary`;
   a third would need per-button DOM hacks. Don't invent one.
-- **Fonts:** IBM Plex Sans and Mono load from Google Fonts via `@import`. That
-  is a request to an external host from a finance tool; see §11.
+- **Fonts:** IBM Plex Sans and Mono ship in the repo (`app/ui/static/fonts`, SIL OFL
+  license) and are served by Streamlit's static folder, so the screen makes no request to an
+  outside host. That needs `--server.enableStaticServing true` in the run command; without it
+  the screen falls back to system fonts. `--server.maxUploadSize 30` makes the upload box state
+  the real limit.
 - **Fake provider is the default.** Design every state to look right with an
   empty or partial dossier — `missing` fields are the normal case there.
 
@@ -459,21 +464,29 @@ The constraints are part of the design. Work with them.
 Found while reading the code against the docs, and from a screenshot of the
 live app. Real, small, and worth fixing before building on top.
 
-**Status after step 5 of `docs/UI_PLAN.md`:** D1 fixed (step 1). D2 and D3 fixed (step 5:
-no side bar, new palette, Plex, flat panel, chips, badge, totals strip, wordmark). D7 settled
-(step 3: a typed, unsaved value does survive switching papers). D8 partly done (the form is
-wider, 5:6; a live look at a real dossier is still owed). D4, D5, D6 are open.
+**Status after step 7 of `docs/UI_PLAN.md`**
+
+| Finding | Status |
+|---|---|
+| D1 PDF text unescaped | **Fixed** (step 1), and guarded by tests |
+| D2 crescent, D3 generated skin | **Fixed** (step 5) |
+| D4 stale mock | **Fixed** (step 7): `design/sample.html` is generated from the real parts |
+| D5 UI_REVIEW describes a rail | **Noted** (step 7): a note at the top of that file |
+| D6 export area changes shape | **Open**: a behaviour change, not yet decided |
+| D7 unsaved values across papers | **Settled** (step 3): they survive, and the key names are pinned by a test |
+| D8 not checked live | **Partly**: wider form (5:6) done; a look at a real dossier is still owed |
+| D9 header ignores flagged values | **Fixed** (step 7): a value in `review` now makes the dossier `warn` |
 
 | # | Finding | Where | Consequence |
 |---|---|---|---|
 | D1 | **PDF text goes into HTML unescaped.** The summary card's `Issued by {who}` interpolates `supplier_name` (read from the PDF) into a string rendered with `unsafe_allow_html=True`. The filename is escaped; the issuer is not. | `app/ui/main.py` summary cards, `issued_by()` | Violates principle 8 and `AGENTS.md`'s untrusted-documents rule. A crafted issuer name renders as markup. **Fix first.** |
 | D2 | **The banner draws a crescent.** `border-left: 4px solid` on a box with `border-radius: 20px` makes the bar follow the corner. | `.banner` in `main.py` | Visible defect, and the generated-callout look §5.1 bans. Remove the bar; don't re-round it. |
 | D3 | **The whole skin is the generated default** — Inter, indigo, zinc neutrals, pastel-tint status, soft shadowed cards, pill status, dotted tags, emoji brand mark. | `main.py` CSS; `DESIGN_SYSTEM.md` | Replace with §5 and §7 in one pass. |
-| D4 | **`design/sample.html` is an older, third look** — cream ground, serif, rail of papers, black primary. | `design/sample.html` | A new contributor reads the wrong mock. Rebuild it from §6.3 after the re-skin, or delete it. |
+| D4 | **`design/sample.html` was an older, third look** — cream ground, serif, rail of papers, black primary. | `design/sample.html` | A new contributor reads the wrong mock. Now generated; see the status table. |
 | D5 | **`UI_REVIEW.md` still describes a left paper rail.** The app now uses tabs. | `docs/UI_REVIEW.md` §5 | The "keep the rail" decision was reversed without being recorded. |
 | D6 | **Export area changes shape with state.** Download buttons are swapped for a checkbox when errors block. | `main.py` export block | Breaks principle 6. Keep the buttons, disable them, put the override beside them. |
 | D7 | **Tab-switch persistence is a stated check (`UI_REVIEW.md` §8) with no test.** | `main.py` | Risk of silently losing typed values. |
-| D9 | **The dossier chip ignores fields that need a check.** `dossier_tier` looks only at validation results, so a dossier whose fields are flagged `review` but whose checks pass shows `Ready to download` next to `Needs a check` chips. Section 4 says a field in `review` makes the tier `warn`. Changing it is a behaviour change, so it waits for a decision. | `app/ui/view.py` `dossier_tier` | The header can say "ready" while a row says "check". |
+| D9 | **The dossier chip ignored fields that need a check.** `dossier_tier` looked only at validation results, so a dossier whose fields were flagged `review` but whose checks passed showed `Ready to download` next to `Needs a check` chips. Section 4 says a field in `review` makes the tier `warn`. | `app/ui/view.py` `dossier_tier` | Fixed: the tier is `warn` when any value is in `review`; with no failed checks the banner counts values (`3 value(s) might need a second look…`). |
 | D8 | **Not checked live beyond one screenshot.** Spacing in the 2:1 preview/fields split (three sub-columns inside the narrow pane) is unverified on a real dossier. | — | Do a visual pass on a real dossier before changing proportions. |
 
 ---
@@ -486,9 +499,7 @@ Each needs an answer from the business or the owner. None blocks the work in §1
    language is unknown. For French: removes a translation step from the most
    repeated action. Against: the code, docs, and prompts are English. Needs the
    two accountants.
-2. **Self-host the fonts, or keep Google Fonts?** `docs/SECURITY.md` is silent
-   about the font request. Shipping two `.woff2` files removes the question and
-   the offline fallback look.
+2. ~~Self-host the fonts, or keep Google Fonts?~~ **Decided: in the repo** (step 1).
 3. **How should `missing` look?** Today a missing field is a blank input —
    honest, but a blank can also mean "forgot to look". Option: a quiet
    `Not on the page` caption in the *Printed text* column. It must never become
@@ -504,7 +515,8 @@ Each needs an answer from the business or the owner. None blocks the work in §1
 
 ## 12. Suggested order of work
 
-Smallest first; each is independently shippable and testable.
+Smallest first; each is independently shippable and testable. Items 1 to 3 are done
+(`docs/UI_PLAN.md` sections 14 to 20); items 4 to 6 are still open.
 
 1. **D1 — escape PDF text in HTML.** Security-class, ~5 lines, one test.
 2. **D2 + D3 — the new skin, in one pass.** Tokens (§5.2), fonts (§5.3),
@@ -512,7 +524,7 @@ Smallest first; each is independently shippable and testable.
    ruled totals strip instead of cards, wordmark instead of the emoji tile,
    small radii, input `edge` and focus. One PR, checked live in both themes,
    with a before/after screenshot.
-3. **D6** — stable export area; **D4** — rebuild or delete the stale mock.
+3. **D6** — stable export area (open); **D4** — the stale mock (done, step 7).
 4. **Decisions 3 and 4** — `missing` and `edited` markers (new, small, high
    value for trust).
 5. **Pane proportions** — only after a live look at a real dossier (D8).

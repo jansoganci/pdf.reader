@@ -1,5 +1,10 @@
 # UI review — the review screen, not the model
 
+> **History.** This is the review that started the redesign. What was decided here has been
+> built, with these differences: the left paper list became tabs, the screen is English, and
+> the look is the one in `docs/design.md`. `design/sample.html` now shows the current screen,
+> not the mock this review compared against. How it was built: `docs/UI_PLAN.md`.
+
 This reviews `app/ui/main.py` and `app/ui/words.py` as they run today at
 `http://127.0.0.1:8765`, against `design/sample.html` and against the real
 extraction already sitting in `data/app.sqlite` for

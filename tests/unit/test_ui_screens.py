@@ -104,10 +104,19 @@ def test_values_and_typed_boxes_are_filled_from_the_dossier():
 
 
 def test_a_clean_dossier_is_ready_to_download():
-    _seed("screen-c")
+    _seed("screen-c", flag_review=False)
     at = _run(dossier_id="screen-c")
     assert "Ready to download." in _text(at)
     assert not at.checkbox  # nothing blocks, so no override box
+
+
+def test_flagged_values_keep_the_dossier_from_saying_ready():
+    _seed("screen-c2")  # three totals flagged, every check passes
+    at = _run(dossier_id="screen-c2")
+    text = _text(at)
+    assert "Ready to download" not in text
+    assert "3 value(s) might need a second look before you download." in text
+    assert "Needs a check" in text
 
 
 def test_a_blocked_dossier_offers_the_override_and_remembers_it():
@@ -120,7 +129,7 @@ def test_a_blocked_dossier_offers_the_override_and_remembers_it():
 
 
 def test_show_passed_checks_toggles():
-    _seed("screen-e")
+    _seed("screen-e", flag_review=False)
     at = _run(dossier_id="screen-e")
     assert any(b.label == "Show passed checks" for b in at.button)
     next(b for b in at.button if b.label == "Show passed checks").click().run()

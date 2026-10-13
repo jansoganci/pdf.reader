@@ -192,18 +192,27 @@ def paper_manual_fields(document_type: str) -> list[tuple[str, str]]:
     return fields
 
 
+def review_count(dossier: Dossier) -> int:
+    """How many values were read but still need a person to look (field status `review`)."""
+    return sum(1 for document in dossier.documents for field in document.fields.values() if field.status == "review")
+
+
 def dossier_tier(dossier: Dossier) -> str:
+    """crit: a check failed with severity error. warn: any other failed check, or any value in
+    `review`. good: nothing to look at. (docs/design.md section 4)"""
     failed = [item for item in dossier.validation if item.status == "failed"]
     if any(item.severity == "error" for item in failed):
         return "crit"
-    return "warn" if failed else "good"
+    return "warn" if failed or review_count(dossier) else "good"
 
 
-def banner_text(tier: str, failed_count: int, blocking_count: int) -> str:
+def banner_text(tier: str, failed_count: int, blocking_count: int, review_values: int = 0) -> str:
     if tier == "crit":
         return f"{blocking_count} item(s) block the download until you check them."
     if tier == "warn":
-        return f"{failed_count} item(s) might need a second look before you download."
+        if failed_count:
+            return f"{failed_count} item(s) might need a second look before you download."
+        return f"{review_values} value(s) might need a second look before you download."
     return TIER_WORDS["good"] + "."
 
 
@@ -303,7 +312,7 @@ def build(dossier: Dossier) -> DossierView:
         paper_count=len(dossier.documents),
         tier=tier,
         blocking_count=len(blocking),
-        banner_text=banner_text(tier, len(failed), len(blocking)),
+        banner_text=banner_text(tier, len(failed), len(blocking), review_count(dossier)),
         totals=totals(dossier),
         papers=tuple(_paper(dossier, document, index) for index, document in enumerate(dossier.documents)),
     )

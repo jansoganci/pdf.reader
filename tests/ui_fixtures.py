@@ -28,8 +28,9 @@ def paper(document_id, document_type, pages, fields, lines=None) -> DocumentReco
     )
 
 
-def maroc_dossier(dossier_id="maroc", supplier_name=SUPPLIER, maersk_last_line="1600.00") -> Dossier:
-    """`maersk_last_line` other than 1600.00 makes the Maersk lines miss its total: one blocking error."""
+def maroc_dossier(dossier_id="maroc", supplier_name=SUPPLIER, maersk_last_line="1600.00", flag_review=True) -> Dossier:
+    """`maersk_last_line` other than 1600.00 makes the Maersk lines miss its total: one blocking error.
+    `flag_review=False` reads every value cleanly, so nothing needs a check."""
     papers = [
         paper("broker", "broker_invoice", [1], {
             "supplier_name": field("Transit Trust", method="ai"), "document_number": field("2026/003654"),
@@ -83,5 +84,10 @@ def maroc_dossier(dossier_id="maroc", supplier_name=SUPPLIER, maersk_last_line="
         id=dossier_id, filename="maroc-import-document.pdf", sha256=f"sha-{dossier_id}",
         pipeline_signature="test", status="needs_review", documents=papers,
     )
+    if not flag_review:
+        for document in dossier.documents:
+            for item in document.fields.values():
+                if item.status == "review":
+                    item.status = "high"
     dossier.validation = validate_dossier(dossier)
     return dossier
