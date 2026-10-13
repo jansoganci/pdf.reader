@@ -107,7 +107,7 @@ app/ui/
     text.py   banner.py   chip.py   totals.py   field_label.py   wordmark.py
     page_label.py   icons.py   (badge.py arrives with the new skin, step 5)
   widgets/              st.* pieces
-    header.py   strip.py   export_area.py   page_viewer.py
+    header.py   strip.py   export.py   page_viewer.py
     paper_form.py   check_list.py   join_split.py
   screens/
     start.py   reading.py   review.py
@@ -137,13 +137,13 @@ Widgets in `widgets/` (call Streamlit):
 
 | Widget | Returns |
 |---|---|
-| `header(view)` | whether `Read another file` was pressed |
+| `header(screen)` | whether `Read another file` was pressed |
 | `strip(manual)` | typed order number and exchange rate |
-| `export_area(dossier)` | nothing (renders buttons or override box) |
-| `page_viewer(paper)` | nothing (renders nav + image, keeps page in state) |
-| `paper_form(paper)` | typed values and corrections on Save |
-| `check_list(items)` | nothing |
-| `join_split(paper)` | which action was pressed |
+| `export_override()` / `export_buttons(csv, json)` | whether "download anyway" is ticked / nothing |
+| `page_viewer(paper, image_for)` | nothing (renders nav + image, keeps the page in state; the screen supplies the image) |
+| `paper_form(paper, manual)` | a `FormResult` on Save, else None |
+| `check_list(paper)` | nothing |
+| `join_split(paper)` | a `JoinSplitAction`, or None |
 
 The same `chip`, `banner`, and `field_label` are used on every paper type, so a
 new document type adds a name in `words.py` and a field list, not new UI.
@@ -363,3 +363,37 @@ toggles *Show passed checks*, corrects a total and presses Save.
 **Settled.** `design.md` D7 (does a typed but unsaved value survive switching papers?)
 **does hold today**, and the widget keys that make it hold are now fixed in `state.py` and
 covered by a test that pins their spelling.
+
+## 17. Step 4 results (done)
+
+`main.py` is now a router of 18 lines. The screens and the pieces they use are split out:
+
+| Folder | Files | Notes |
+|---|---|---|
+| `app/ui/screens/` | `start.py` (16), `reading.py` (32), `review.py` (98) | the only code in `app/ui` that calls `app.service` |
+| `app/ui/widgets/` | `header`, `strip`, `export`, `page_viewer`, `paper_form`, `check_list`, `join_split` (13 to 75 lines each) | draw something, return what the person did; never save |
+
+Two small design decisions made while building, both inside the plan's rules:
+
+- `page_viewer` takes an `image_for(page)` function from the screen instead of calling the
+  service itself, so widgets stay free of service calls.
+- `export_area` became two widgets (`export_override`, `export_buttons`); the screen decides
+  which to show and does the saving.
+
+**Checks**
+
+- Tests: 82 to 105. New: `test_ui_layers.py` enforces the layer rules on import lines (only
+  screens call the service; `view`, `words`, `components` never import Streamlit; lower layers
+  never import higher ones; `main.py` stays a router; no file becomes a monolith again) and
+  `test_ui_screens.py` runs the real screens with Streamlit's `AppTest`: start and reading
+  (good file, bad file, back), the review screen with 8 tabs, the blocked-export override, show
+  passed checks, page stepping, saving a correction (the original value is kept), join, split,
+  a missing dossier, read another file, and a hostile issuer name.
+- Browser, same scripted tour as step 3: the behaviour log is **identical**, and all 10 tour
+  screenshots plus the review and start screens in light and dark are **pixel-identical**
+  (this time even the Save screenshot). The hostile-dossier probe is still clean.
+- Real uploads through the start screen: a valid PDF opens a review screen; a non-PDF shows
+  "File was not accepted. Upload one PDF." with a Back button.
+
+The code is now laid out as planned; what remains in `docs/UI_PLAN.md` section 9 is the
+skin (step 5), the visual pass (step 6), and the clean-up of the old mock and doc (step 7).

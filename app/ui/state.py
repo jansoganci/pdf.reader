@@ -42,6 +42,12 @@ def close_dossier() -> None:
     st.session_state.pop("dossier_id", None)
 
 
+def go_home() -> None:
+    """Back to the start screen: forget the open dossier and run again."""
+    close_dossier()
+    st.rerun()
+
+
 # -- "show passed checks" --------------------------------------------------------
 
 def show_passed() -> bool:
