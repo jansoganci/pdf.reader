@@ -83,7 +83,10 @@ Rules:
 - Severity → tier (`error`→crit, `warning`→review, none→good) lives in
   `view.py`, once.
 - **Every string that came from a PDF is escaped inside `components/`, never by
-  the caller.** A component takes plain text and returns safe HTML.
+  the caller.** A component takes plain text and returns safe HTML. PDF text is
+  never passed to a markdown-rendering call (`st.write`, `st.caption`): Streamlit's
+  markdown makes links and externally loaded images, even from a bare URL.
+  A line of PDF text on its own goes through `plain()`.
 - Only `theme/` contains hex values or pixel sizes.
 
 ## 4. Folder layout **[Proposed P1]**
@@ -94,13 +97,15 @@ app/ui/
   state.py              session_state keys + typed get/set (one place)
   view.py               Dossier -> DossierView / PaperView (pure)
   words.py              (exists, unchanged)
+  static/fonts/         IBM Plex woff2 + OFL license (served at /app/static/fonts/)
   theme/
     __init__.py         inject(): reads the css files, one st.markdown call
     tokens.css          :root + dark values from design.md §5.2 only
     components.css      banner, chip, totals, panel, field rows
     streamlit.css       overrides of Streamlit widgets (data-testid selectors)
   components/           pure HTML builders
-    banner.py   chip.py   badge.py   totals.py   field_label.py   icons.py
+    text.py   banner.py   chip.py   totals.py   field_label.py   wordmark.py
+    page_label.py   icons.py   (badge.py arrives with the new skin, step 5)
   widgets/              st.* pieces
     header.py   strip.py   export_area.py   page_viewer.py
     paper_form.py   check_list.py   join_split.py
@@ -167,12 +172,16 @@ It holds the logic that is in `main.py` today: `_display`, `_currency`,
   `page-{doc}`) so session state keeps working during the move.
 - Tabs, forms, columns, `download_button`, `status` stay native widgets.
 - Streamlit is **not installed in this working environment**. Step 0 installs it.
+- Fonts are served by Streamlit's static folder, which needs
+  `--server.enableStaticServing true` (now in the README run command). Without it
+  the screen falls back to system fonts.
 
 ## 8. Tests **[Proposed P3]**
 
 | Test | Proves |
 |---|---|
 | `components/*` unit tests | each builder escapes `<`, `&`, quotes; a hostile issuer name stays text |
+| `test_ui_html_safety.py` | every `unsafe_allow_html=True` call gets a constant or a component builder, never an f-string |
 | `view.py` unit tests | severity→tier; headline amount; default page opens on the flagged field's page; broker/customs field lists |
 | `test_design_rules.py` | the CSS has no side-bar borders, no `box-shadow`, no pill radii, no Inter, no indigo; only `theme/` has hex colours |
 | Streamlit `AppTest` smoke | each screen renders with the fake provider and a seeded dossier; no exceptions |
@@ -255,3 +264,42 @@ Seen on the live screen, beyond what `design.md` already lists:
 | F5 | The drop zone says **"Limit 200MB per file"**, but the app limit is 30 MB. It is Streamlit's default text. | step 6; needs CSS or a replacement, since `.streamlit/` is not in the repo |
 | F6 | When a check blocks the download, the export area shows only a checkbox, no buttons (`design.md` D6, deferred). | later |
 | F7 | In this sandbox Google Fonts did not load, so a fallback font rendered. Open decision 1 (self-host) matters. | decision |
+
+## 14. Step 1 results (done)
+
+**Fonts (decided: in the repo).** IBM Plex Sans 400/500/600 and Mono 400/500, Latin
+and Latin Extended (for ı, ş, Ş), 188 KB, in `app/ui/static/fonts/` with the SIL OFL
+license. Source: the `@fontsource` packages, version 5.1.0. Not wired into the CSS yet;
+that happens with the new skin in step 5. Checked that Streamlit serves them (HTTP 200,
+`font/woff2`) when started with `--server.enableStaticServing true`.
+
+**D1 reproduced, then closed.** A dossier whose issuer name was
+`<img src=x id=pwn-html> **b** [l](http://evil.example/) ![i](http://evil.example/p.png)`
+was loaded on the live screen.
+
+| Probe | Before | After |
+|---|---|---|
+| raw `<img>` element in the page | 1 | 0 |
+| images loading from the outside host | 4 | 0 |
+| links to the outside host | 5 | 0 |
+| bold text from the document | 5 | 0 |
+
+The text still shows, as plain text. The first fix (escaping markdown characters) left
+bare URLs clickable, because Streamlit auto-links them; the final fix renders PDF text
+only as escaped HTML blocks.
+
+**What changed in the code.** New `app/ui/components/` (pure builders: `banner`,
+`tag`, `status_pill`, `summary_card`, `wordmark`, `field_label`, `group_title`,
+`page_label`, `plain`, `esc`) and `main.py` now calls them. Tests went from 24 to 44.
+
+**Visual check.** Same seeded dossier, before and after, light and dark: the header,
+export area, banner and summary cards are pixel-identical. About 0.4% of pixels differ,
+all in the paper pane: printed text sits 1-3 px differently, and the line numbers on
+broker invoices ("1.") no longer hang as a list marker. Layout is unchanged.
+
+**New findings**
+
+| # | Finding | Fixed by |
+|---|---|---|
+| F8 | Streamlit forces its own font (Source Sans) on its text, so the CSS `font-family` set on `.stApp` never reached it; the app has not been rendering Inter anywhere. | step 5: apply the family to Streamlit's text elements |
+| F9 | Streamlit gives every markdown block a -16px bottom margin that a `<p>` cancels; any raw `<div>` block needs the margin written out. | already handled for `.pdf-caption` and `.pdf-body`; remember for new blocks |

@@ -1,5 +1,3 @@
-import html
-
 import streamlit as st
 
 from app.models import DocumentRecord, Dossier
@@ -14,6 +12,16 @@ from app.service import (
     process_upload,
     set_manual,
     split_document,
+)
+from app.ui.components import (
+    TIER_WORDS,
+    banner,
+    field_label,
+    group_title,
+    page_label,
+    plain,
+    summary_card,
+    wordmark,
 )
 from app.ui.words import (
     FILE_MANUAL,
@@ -277,6 +285,13 @@ st.markdown(
     /* Summary cards */
     .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
             box-shadow: var(--shadow-sm); padding: 16px 18px; min-height: 108px; }
+    /* PDF text shown as an escaped block (components.plain). Sizes match the
+       Streamlit caption and body text they replace. Streamlit gives every markdown
+       block a -16px bottom margin that a <p> cancels with its own +16px; a <div>
+       needs the +16px written out. */
+    .pdf-caption { font-size: 14px; line-height: 22.4px; color: var(--ink-secondary); margin-bottom: 16px; }
+    .pdf-body { font-size: 16px; line-height: 25.6px; color: var(--ink); margin-bottom: 16px; }
+
     .card-label { font-size: 13px; font-weight: 600; color: var(--ink-secondary); margin-bottom: 6px; }
     .card-amount { font-size: 22px; font-weight: 700; color: var(--ink); letter-spacing: -0.01em; }
     .card-sub { font-size: 13px; color: var(--ink-secondary); margin: 4px 0 8px; }
@@ -299,21 +314,6 @@ MONEY_KEYS = {
     "net_amount", "tax_amount", "total_amount", "fob_amount",
     "freight_amount", "customs_value", "insurance_amount",
 }
-
-_SVG_ATTRS = 'width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"'
-_BANNER_ICONS = {
-    "good": f'<svg {_SVG_ATTRS}><circle cx="8" cy="8" r="6.25"/><path d="M5.3 8.2l1.8 1.8 3.6-3.8"/></svg>',
-    "warn": (
-        f'<svg {_SVG_ATTRS}><path d="M8 2.2l6.3 11A1 1 0 0 1 13.4 15H2.6a1 1 0 0 1-.9-1.8z"/>'
-        '<path d="M8 6.3v3"/><circle cx="8" cy="11.4" r="0.7" fill="currentColor" stroke="none"/></svg>'
-    ),
-    "crit": f'<svg {_SVG_ATTRS}><circle cx="8" cy="8" r="6.25"/><path d="M5.8 5.8l4.4 4.4M10.2 5.8l-4.4 4.4"/></svg>',
-}
-
-
-def _banner(tier: str, message: str) -> str:
-    return f'<div class="banner {tier}">{_BANNER_ICONS[tier]}<span>{message}</span></div>'
-
 
 def _currency(document: DocumentRecord, key: str) -> str | None:
     if key == "customs_value":
@@ -402,7 +402,7 @@ if "show_passed" not in st.session_state:
 pending = st.session_state.get("pending")
 if pending:
     st.header("Reading the PDF")
-    st.write(f"{pending['name']} is being read now.")
+    st.markdown(plain(f"{pending['name']} is being read now.", "body"), unsafe_allow_html=True)
     st.write("Please wait. This takes about a minute. Do not close this page.")
     with st.status("Sending the PDF to be read…", expanded=True) as status:
         try:
@@ -446,24 +446,10 @@ failed = [item for item in dossier.validation if item.status == "failed"]
 blocking = [item for item in failed if item.severity == "error"]
 
 status_tier = "crit" if blocking else ("warn" if failed else "good")
-status_text = {
-    "crit": "Blocks download",
-    "warn": "Needs a check",
-    "good": "Ready to download",
-}[status_tier]
 
 head_left, head_right = st.columns([3, 1])
 with head_left:
-    st.markdown(
-        f'<div style="display:flex;align-items:center;gap:14px;">'
-        f'<div class="brand-mark-inline">📄</div>'
-        f'<div><strong style="font-size:20px;">Import file</strong>'
-        f'<div style="display:flex;align-items:center;gap:8px;margin-top:3px;">'
-        f'<span style="font-size:13px;color:var(--ink-secondary);">{html.escape(dossier.filename)} · {len(dossier.documents)} papers read</span>'
-        f'<span class="status-pill {status_tier}">{status_text}</span>'
-        f"</div></div></div>",
-        unsafe_allow_html=True,
-    )
+    st.markdown(wordmark(dossier.filename, len(dossier.documents), status_tier), unsafe_allow_html=True)
 with head_right:
     if st.button("Read another file"):
         _start_home()
@@ -500,11 +486,11 @@ with st.container():
             )
 
 if blocking:
-    st.markdown(_banner("crit", f"{len(blocking)} item(s) block the download until you check them."), unsafe_allow_html=True)
+    st.markdown(banner("crit", f"{len(blocking)} item(s) block the download until you check them."), unsafe_allow_html=True)
 elif failed:
-    st.markdown(_banner("warn", f"{len(failed)} item(s) might need a second look before you download."), unsafe_allow_html=True)
+    st.markdown(banner("warn", f"{len(failed)} item(s) might need a second look before you download."), unsafe_allow_html=True)
 else:
-    st.markdown(_banner("good", "Ready to download."), unsafe_allow_html=True)
+    st.markdown(banner("good", TIER_WORDS["good"] + "."), unsafe_allow_html=True)
 if st.button("Hide passed checks" if st.session_state["show_passed"] else "Show passed checks"):
     st.session_state["show_passed"] = not st.session_state["show_passed"]
     st.rerun()
@@ -532,15 +518,7 @@ if summary:
             sub = f"Issued by {who}"
         else:
             sub = ""
-        tag = '<span class="tag warn">Needs a check</span>' if needs else ""
-        column.markdown(
-            f'<div class="card">'
-            f'<div class="card-label">{label}</div>'
-            f'<div class="card-amount">{amount}</div>'
-            f'<div class="card-sub">{sub}</div>{tag}'
-            f"</div>",
-            unsafe_allow_html=True,
-        )
+        column.markdown(summary_card(label, amount, sub, needs), unsafe_allow_html=True)
 
 st.write("")
 tabs = st.tabs([_tab_label(item) for item in dossier.documents])
@@ -549,13 +527,13 @@ for tab, document in zip(tabs, dossier.documents):
         st.subheader(paper_name(document.document_type))
         who = issued_by(document)
         amount = _headline_amount(document)
-        st.caption(" · ".join(
+        st.markdown(plain(" · ".join(
             bit for bit in (
                 pages_text(document.page_numbers),
                 f"Issued by {who}" if who else "",
                 amount,
             ) if bit
-        ))
+        )), unsafe_allow_html=True)
 
         page_state_key = f"page-{document.id}"
         current_page = st.session_state.get(page_state_key, _default_page(document))
@@ -576,8 +554,7 @@ for tab, document in zip(tabs, dossier.documents):
                         st.session_state[page_state_key] = document.page_numbers[position - 1]
                         st.rerun()
                     nav_label.markdown(
-                        f'<div style="text-align:center">Page {current_page} · '
-                        f"{position + 1} of {len(document.page_numbers)} for this paper</div>",
+                        page_label(current_page, position, len(document.page_numbers)),
                         unsafe_allow_html=True,
                     )
                     if nav_right.button(
@@ -597,13 +574,15 @@ for tab, document in zip(tabs, dossier.documents):
             header[2].caption("Printed text")
 
             with st.form(f"paper-{document.id}"):
-                st.markdown('<div class="group-title">Copied from the page</div>', unsafe_allow_html=True)
+                st.markdown(group_title("Copied from the page"), unsafe_allow_html=True)
                 correction_inputs: dict[str, tuple[str, str]] = {}
                 for key in shown_keys(document):
                     field = document.fields[key]
                     label, value_col, printed = st.columns([1.3, 1.6, 1.5])
-                    tag = ' <span class="tag warn">Needs a check</span>' if field.status == "review" else ""
-                    label.markdown(f"{field_name(document.document_type, key)}{tag}", unsafe_allow_html=True)
+                    label.markdown(
+                        field_label(field_name(document.document_type, key), field.status == "review"),
+                        unsafe_allow_html=True,
+                    )
                     current_display = _display(document, key)
                     new_value = value_col.text_input(
                         field_name(document.document_type, key),
@@ -611,7 +590,7 @@ for tab, document in zip(tabs, dossier.documents):
                         key=f"value-{document.id}-{key}",
                         label_visibility="collapsed",
                     )
-                    printed.caption(field.raw_text or "")
+                    printed.markdown(plain(field.raw_text), unsafe_allow_html=True)
                     correction_inputs[key] = (current_display, new_value)
 
                 line_typed: dict[str, str] = {}
@@ -626,7 +605,7 @@ for tab, document in zip(tabs, dossier.documents):
                         line_label = f"{index}. {description_text} {amount_text}".strip()
                         if document.document_type == "broker_invoice":
                             line_left, line_tax, line_reason = st.columns([2.2, 1.15, 1.15])
-                            line_left.write(line_label)
+                            line_left.markdown(plain(line_label, "body"), unsafe_allow_html=True)
                             for lk, ll in LINE_MANUAL:
                                 store_key = f"{document.id}:line:{index}:{lk}"
                                 target = line_tax if lk == "tax_code" else line_reason
@@ -634,10 +613,10 @@ for tab, document in zip(tabs, dossier.documents):
                                     ll, value=dossier.manual.get(store_key, ""), key=f"line-{store_key}"
                                 )
                         else:
-                            st.write(line_label)
+                            st.markdown(plain(line_label, "body"), unsafe_allow_html=True)
 
                 st.write("")
-                st.markdown('<div class="group-title">You type</div>', unsafe_allow_html=True)
+                st.markdown(group_title("You type"), unsafe_allow_html=True)
                 st.caption("Not on the PDF. Leave a box empty if you do not have it yet.")
                 if document.document_type == "customs_liquidation":
                     st.caption("Payment number above is the liquidation number. SAP reference stays empty until you type it.")
@@ -662,7 +641,7 @@ for tab, document in zip(tabs, dossier.documents):
         relevant = [item for item in failed if not item.fields or document.id in item.fields]
         for item in relevant:
             tier = "crit" if item.severity == "error" else "warn"
-            st.markdown(_banner(tier, _check_sentence(dossier, item)), unsafe_allow_html=True)
+            st.markdown(banner(tier, _check_sentence(dossier, item)), unsafe_allow_html=True)
         if st.session_state["show_passed"]:
             for item in dossier.validation:
                 if item.status == "passed" and (not item.fields or document.id in item.fields):
