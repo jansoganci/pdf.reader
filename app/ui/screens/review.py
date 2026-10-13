@@ -54,19 +54,28 @@ def render(dossier_id: str) -> None:
 
 
 def _export_area(dossier, screen: view.DossierView) -> None:
+    """The export row keeps one shape. While errors block it the buttons are disabled and the
+    "download anyway" box sits beside them; ticking it lets the files through."""
+    blocked = screen.blocking_count > 0
+    csv = json = None
+    if not blocked or dossier.export_with_errors:
+        try:
+            csv = export_dossier(dossier.id, "fields_csv").read_bytes()
+            json = export_dossier(dossier.id, "json").read_bytes()
+        except PermissionError:
+            csv = json = None
+    state.init_override(dossier.id, dossier.export_with_errors)
     with st.container():
         st.caption("Export")
-        if screen.blocking_count and not dossier.export_with_errors:
-            if widgets.export_override():
-                mark_export_with_errors(dossier.id, True)
-                st.rerun()
-            return
-        try:
-            csv_path = export_dossier(dossier.id, "fields_csv")
-            json_path = export_dossier(dossier.id, "json")
-        except PermissionError:
-            return
-        widgets.export_buttons(csv_path.read_bytes(), json_path.read_bytes())
+        allowed = widgets.export_row(
+            csv, json,
+            show_override=blocked,
+            overridden=dossier.export_with_errors,
+            override_key=state.override_key(dossier.id),
+        )
+    if blocked and allowed != dossier.export_with_errors:
+        mark_export_with_errors(dossier.id, allowed)
+        st.rerun()
 
 
 def _paper_tab(dossier, paper: view.PaperView, file_typed: dict[str, str]) -> None:

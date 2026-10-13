@@ -169,7 +169,8 @@ Rules:
 - **Dossier state is a chip in the header; item state is a chip on the row.**
   Same chip, same words. Never put a banner where a chip will do.
 - **A blocked export is overridable by a person, not by the app.** The override
-  is an explicit, stored choice (`export_with_errors`).
+  is an explicit, stored choice (`export_with_errors`). It is a box beside the two
+  download buttons; the buttons are always there and are disabled until it is ticked.
 - **The words don't change between places:** header chip, row chip, and banner
   sentence use the same tier words.
 
@@ -321,7 +322,7 @@ percentage, no streaming of partial results.
 ├ strip ────────────────────────────────────────────────────────────┤
 │ Order number [ ]  Exchange rate you enter [ ]  (not on any page)   │
 ├───────────────────────────────────────────────────────────────────┤
-│ Export:  [Download CSV] [Download JSON]    ← or the override box   │
+│ Export:  [Download CSV] [Download JSON]  ☐ Download anyway…        │
 │ [!] banner: dossier state in one sentence    [Show passed checks]  │
 │ ── Supplier invoice ─┬─ Customs value ─┬─ Customs payment ─┬─ … ── │
 │  18,921.09 EUR       │ 210,800.00 MAD  │ 44,004.00 MAD     │        │
@@ -374,6 +375,7 @@ selector the CSS owns. The class names below are the targets for `main.py`.
 | **Button – primary** | `accent` fill, `on-accent` label, 4px radius | rest / hover / disabled | One primary per region: `Read this PDF`, `Save`, `Download JSON`. |
 | **Button – secondary** | `surface`, 1px `edge`, `ink` label | rest / hover / disabled | Everything else. There is no third variant. |
 | **Text input** | `surface`, 1px `edge`, 3px radius, 15/500 | rest / focus / disabled | Focus: border `accent` + 2px solid `accent` outline with 1px offset. |
+| **Export row** | `[Download CSV] [Download JSON]` then, only while errors block, `☐ Download anyway` | buttons enabled / disabled; box unticked / ticked | The same shape in every state. Disabled beats hidden. Ticking changes nothing but the buttons' state. |
 | **Page nav** | chevron button · `Page N · i of n for this paper` · chevron | first / middle / last (end disabled) | Only when a paper spans more than one page. |
 | **Tab** | label, equal width, 2px `accent` underline on selected | rest / selected | Label = paper name; `•` prefix = needs check. |
 | **Wordmark** | product name, 20/600, `ink` | — | Plain type. No tile, no emoji. |
@@ -472,7 +474,7 @@ live app. Real, small, and worth fixing before building on top.
 | D2 crescent, D3 generated skin | **Fixed** (step 5) |
 | D4 stale mock | **Fixed** (step 7): `design/sample.html` is generated from the real parts |
 | D5 UI_REVIEW describes a rail | **Noted** (step 7): a note at the top of that file |
-| D6 export area changes shape | **Open**: a behaviour change, not yet decided |
+| D6 export area changes shape | **Fixed** (after step 7): the row is always `[CSV] [JSON] ☐ Download anyway`; the buttons are disabled while errors block and the box stays visible, ticked or not |
 | D7 unsaved values across papers | **Settled** (step 3): they survive, and the key names are pinned by a test |
 | D8 not checked live | **Partly**: wider form (5:6) done; a look at a real dossier is still owed |
 | D9 header ignores flagged values | **Fixed** (step 7): a value in `review` now makes the dossier `warn` |
@@ -484,7 +486,7 @@ live app. Real, small, and worth fixing before building on top.
 | D3 | **The whole skin is the generated default** — Inter, indigo, zinc neutrals, pastel-tint status, soft shadowed cards, pill status, dotted tags, emoji brand mark. | `main.py` CSS; `DESIGN_SYSTEM.md` | Replace with §5 and §7 in one pass. |
 | D4 | **`design/sample.html` was an older, third look** — cream ground, serif, rail of papers, black primary. | `design/sample.html` | A new contributor reads the wrong mock. Now generated; see the status table. |
 | D5 | **`UI_REVIEW.md` still describes a left paper rail.** The app now uses tabs. | `docs/UI_REVIEW.md` §5 | The "keep the rail" decision was reversed without being recorded. |
-| D6 | **Export area changes shape with state.** Download buttons are swapped for a checkbox when errors block. | `main.py` export block | Breaks principle 6. Keep the buttons, disable them, put the override beside them. |
+| D6 | **Export area changed shape with state.** Download buttons were swapped for a checkbox when errors blocked (ticking it moved the banner, totals and tabs down 20 px). | `main.py` export block | Breaks principle 6. Keep the buttons, disable them, put the override beside them. |
 | D7 | **Tab-switch persistence is a stated check (`UI_REVIEW.md` §8) with no test.** | `main.py` | Risk of silently losing typed values. |
 | D9 | **The dossier chip ignored fields that need a check.** `dossier_tier` looked only at validation results, so a dossier whose fields were flagged `review` but whose checks passed showed `Ready to download` next to `Needs a check` chips. Section 4 says a field in `review` makes the tier `warn`. | `app/ui/view.py` `dossier_tier` | Fixed: the tier is `warn` when any value is in `review`; with no failed checks the banner counts values (`3 value(s) might need a second look…`). |
 | D8 | **Not checked live beyond one screenshot.** Spacing in the 2:1 preview/fields split (three sub-columns inside the narrow pane) is unverified on a real dossier. | — | Do a visual pass on a real dossier before changing proportions. |
@@ -516,7 +518,7 @@ Each needs an answer from the business or the owner. None blocks the work in §1
 ## 12. Suggested order of work
 
 Smallest first; each is independently shippable and testable. Items 1 to 3 are done
-(`docs/UI_PLAN.md` sections 14 to 20); items 4 to 6 are still open.
+(`docs/UI_PLAN.md` sections 14 to 21); items 4 to 6 are still open.
 
 1. **D1 — escape PDF text in HTML.** Security-class, ~5 lines, one test.
 2. **D2 + D3 — the new skin, in one pass.** Tokens (§5.2), fonts (§5.3),
@@ -524,7 +526,7 @@ Smallest first; each is independently shippable and testable. Items 1 to 3 are d
    ruled totals strip instead of cards, wordmark instead of the emoji tile,
    small radii, input `edge` and focus. One PR, checked live in both themes,
    with a before/after screenshot.
-3. **D6** — stable export area (open); **D4** — the stale mock (done, step 7).
+3. **D6** — stable export area (done); **D4** — the stale mock (done, step 7).
 4. **Decisions 3 and 4** — `missing` and `edited` markers (new, small, high
    value for trust).
 5. **Pane proportions** — only after a live look at a real dossier (D8).

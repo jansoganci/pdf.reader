@@ -1,7 +1,7 @@
 # UI plan — new skin, clean structure
 
-> **Status: done (steps 0 to 7).** Sections 0 to 12 are the plan as agreed; sections 13 to 20 record
-> what each step did and how it was checked.
+> **Status: done (steps 0 to 7, plus D6).** Sections 0 to 12 are the plan as agreed; sections 13 to 21
+> record what each step did and how it was checked.
 
 Draft for review. Nothing here is built yet. The look is fixed by `docs/design.md`;
 this file decides **how the code is organised and in what order it is built**.
@@ -498,3 +498,33 @@ a failed check, and a blocking error winning).
 **Whole-plan check.** 127 tests pass. The scripted browser tour (8 tabs, page stepping, an
 unsaved value surviving a tab switch, show passed checks, correcting a total and saving) gives
 the same behaviour log as at step 3.
+
+## 21. After the plan: D6, a stable export area (done)
+
+The export row used to change shape: while errors blocked the download it showed only a
+"download anyway" box; ticking it made the box vanish and two buttons appear. Measured in the
+browser before the change, ticking moved the banner, the totals strip and the tabs **down 20 px**
+and made two buttons appear from nowhere.
+
+**Now** the row is `[Download CSV] [Download JSON] ☐ Download anyway` in every state. While errors
+block, the buttons are disabled and the box is unticked; ticking it saves the choice and enables
+the buttons; unticking disables them again. With no blocking error there is no box and the buttons
+are enabled. `widgets.export_row` draws it and `review._export_area` decides what is allowed.
+
+**Measured after:** banner, totals, tabs, both buttons and the box sit at identical coordinates
+before and after a tick; only `disabled` and `checked` change.
+
+**Found and fixed on the way**
+
+- A first version passed the saved flag as the box's `value`. A changing value gives the box a new
+  identity, so the page redrew it and **keyboard focus was lost after every press of Space**. The
+  box now starts from the saved flag once per dossier (`state.init_override`) and keeps one
+  identity; three presses of Space in a row toggle it three times with focus staying on the box.
+- The ticked box looked empty: the CSS set the `background` shorthand, which erased the tick image
+  Streamlit draws on the box. It now sets only the colour; ticked is an accent fill, and the box
+  has the same 2 px focus ring as the other controls.
+- The box key now includes the dossier id, so a tick cannot carry over to the next file.
+
+Tests: 127 to 135 (disabled and enabled buttons in each state, tick, untick, a saved override
+reopened ticked, one dossier's tick not affecting another, the key pinned, the checkbox CSS).
+The scripted tour, the injection probe and real uploads give the same results as before.

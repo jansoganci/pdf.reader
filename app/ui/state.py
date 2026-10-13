@@ -7,8 +7,6 @@ so renaming a key would silently drop what a person typed when they switch paper
 
 import streamlit as st
 
-ALLOW_EXPORT_KEY = "allow-export-with-errors"
-
 
 def init() -> None:
     if "show_passed" not in st.session_state:
@@ -90,6 +88,22 @@ def paper_key(store_key: str) -> str:
 
 def line_key(store_key: str) -> str:
     return f"line-{store_key}"
+
+
+def override_key(dossier_id: str) -> str:
+    """The "download anyway" box. One key per dossier, so a tick never carries over to the next file."""
+    return f"allow-export-with-errors-{dossier_id}"
+
+
+def init_override(dossier_id: str, overridden: bool) -> None:
+    """Start the "download anyway" box from what is saved, once per dossier per session.
+
+    The box is given no `value`: a value that changes would give it a new identity on every tick,
+    and a keyboard user would lose focus after each press.
+    """
+    key = override_key(dossier_id)
+    if key not in st.session_state:
+        st.session_state[key] = overridden
 
 
 def form_key(document_id: str) -> str:

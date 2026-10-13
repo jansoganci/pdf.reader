@@ -5,7 +5,7 @@ and never saves; the screen does that with what the widget returns.
 """
 
 from app.ui.widgets.check_list import check_list
-from app.ui.widgets.export import export_buttons, export_override
+from app.ui.widgets.export import export_row
 from app.ui.widgets.header import header
 from app.ui.widgets.join_split import JoinSplitAction, join_split
 from app.ui.widgets.page_viewer import page_viewer
@@ -16,8 +16,7 @@ __all__ = [
     "FormResult",
     "JoinSplitAction",
     "check_list",
-    "export_buttons",
-    "export_override",
+    "export_row",
     "header",
     "join_split",
     "page_viewer",

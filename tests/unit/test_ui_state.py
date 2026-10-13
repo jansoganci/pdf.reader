@@ -26,7 +26,7 @@ def test_widget_keys_keep_their_original_spelling():
     assert state.split_after_key("doc1") == "split-after-doc1"
     assert state.split_key("doc1") == "split-doc1"
     assert state.page_key("doc1") == "page-doc1"
-    assert state.ALLOW_EXPORT_KEY == "allow-export-with-errors"
+    assert state.override_key("doc1") == "allow-export-with-errors-doc1"
 
 
 def test_init_sets_show_passed_once(session):
@@ -43,6 +43,16 @@ def test_toggle_flips_show_passed(session):
     assert state.show_passed() is True
     state.toggle_show_passed()
     assert state.show_passed() is False
+
+
+def test_the_override_box_starts_from_what_is_saved_and_is_not_reset_by_later_runs(session):
+    state.init_override("d1", True)
+    assert session[state.override_key("d1")] is True
+    session[state.override_key("d1")] = False  # the person unticked it
+    state.init_override("d1", True)  # a later run must not tick it again
+    assert session[state.override_key("d1")] is False
+    state.init_override("d2", False)
+    assert session[state.override_key("d2")] is False
 
 
 def test_pending_upload_round_trip(session):

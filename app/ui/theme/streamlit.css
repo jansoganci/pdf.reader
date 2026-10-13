@@ -143,11 +143,20 @@ button { white-space: nowrap !important; }
 .stApp [data-testid="stTextInput"] input::placeholder { color: var(--ink-secondary) !important; }
 .stApp [data-testid="stSelectbox"] [data-baseweb="select"] * { color: var(--ink) !important; }
 
-/* Checkbox box (resting state only; the checked mark keeps Streamlit's own rendering). */
-.stApp [data-testid="stCheckbox"] span:first-of-type {
-    background: var(--surface) !important;
+/* Checkbox. The tick is a background image Streamlit draws on the box, so only the colour is set
+   here (never the `background` shorthand, which would wipe the image). Ticked: accent fill. */
+.stApp [data-testid="stCheckbox"] label > span:first-of-type {
+    background-color: var(--surface) !important;
     border: 1px solid var(--edge) !important;
     border-radius: var(--radius-sm) !important;
+}
+.stApp [data-testid="stCheckbox"] label:has(input:checked) > span:first-of-type {
+    background-color: var(--accent) !important;
+    border-color: var(--accent) !important;
+}
+.stApp [data-testid="stCheckbox"] label:has(input:focus-visible) > span:first-of-type {
+    outline: 2px solid var(--accent-text);
+    outline-offset: 2px;
 }
 
 /* The reading screen's status block. */

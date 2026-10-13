@@ -9,7 +9,7 @@ import fitz
 import pytest
 from streamlit.testing.v1 import AppTest
 
-from app.service import get_dossier
+from app.service import get_dossier, mark_export_with_errors
 from app.storage import db
 from tests.ui_fixtures import maroc_dossier
 
@@ -107,7 +107,6 @@ def test_a_clean_dossier_is_ready_to_download():
     _seed("screen-c", flag_review=False)
     at = _run(dossier_id="screen-c")
     assert "Ready to download." in _text(at)
-    assert not at.checkbox  # nothing blocks, so no override box
 
 
 def test_flagged_values_keep_the_dossier_from_saying_ready():
@@ -119,13 +118,70 @@ def test_flagged_values_keep_the_dossier_from_saying_ready():
     assert "Needs a check" in text
 
 
-def test_a_blocked_dossier_offers_the_override_and_remembers_it():
+def _downloads(at: AppTest) -> dict[str, bool]:
+    """Download button label -> disabled."""
+    return {item.proto.label: item.proto.disabled for item in at.get("download_button")}
+
+
+def test_the_export_row_has_the_same_two_buttons_in_every_state():
+    _seed("screen-d0", flag_review=False)
+    _seed("screen-d1", maersk_last_line="1500.00")
+    clean = _downloads(_run(dossier_id="screen-d0"))
+    blocked = _downloads(_run(dossier_id="screen-d1"))
+    assert list(clean) == list(blocked) == ["Download CSV", "Download JSON"]
+
+
+def test_a_clean_dossier_has_enabled_buttons_and_no_override_box():
+    _seed("screen-d2", flag_review=False)
+    at = _run(dossier_id="screen-d2")
+    assert _downloads(at) == {"Download CSV": False, "Download JSON": False}
+    assert not at.checkbox
+
+
+def test_a_blocked_dossier_shows_disabled_buttons_with_the_override_beside_them():
     _seed("screen-d", maersk_last_line="1500.00")
     at = _run(dossier_id="screen-d")
-    assert at.checkbox(key="allow-export-with-errors").label.startswith("Download anyway")
-    at.checkbox(key="allow-export-with-errors").check().run()
-    assert get_dossier("screen-d").export_with_errors is True
-    assert not at.checkbox  # the override box is gone once it is on
+    assert _downloads(at) == {"Download CSV": True, "Download JSON": True}
+    box = at.checkbox(key="allow-export-with-errors-screen-d")
+    assert box.label.startswith("Download anyway") and box.value is False
+    assert get_dossier("screen-d").export_with_errors is False
+
+
+def test_ticking_the_override_enables_the_buttons_and_the_box_stays():
+    _seed("screen-d3", maersk_last_line="1500.00")
+    at = _run(dossier_id="screen-d3")
+    at.checkbox(key="allow-export-with-errors-screen-d3").check().run()
+    assert not at.exception
+    assert get_dossier("screen-d3").export_with_errors is True
+    assert _downloads(at) == {"Download CSV": False, "Download JSON": False}
+    assert at.checkbox(key="allow-export-with-errors-screen-d3").value is True  # still there, still ticked
+
+
+def test_unticking_the_override_blocks_the_buttons_again():
+    _seed("screen-d4", maersk_last_line="1500.00")
+    at = _run(dossier_id="screen-d4")
+    at.checkbox(key="allow-export-with-errors-screen-d4").check().run()
+    at.checkbox(key="allow-export-with-errors-screen-d4").uncheck().run()
+    assert get_dossier("screen-d4").export_with_errors is False
+    assert _downloads(at) == {"Download CSV": True, "Download JSON": True}
+
+
+def test_a_saved_override_is_ticked_when_the_file_is_opened_again():
+    _seed("screen-d7", maersk_last_line="1500.00")
+    mark_export_with_errors("screen-d7", True)
+    at = _run(dossier_id="screen-d7")
+    assert at.checkbox(key="allow-export-with-errors-screen-d7").value is True
+    assert _downloads(at) == {"Download CSV": False, "Download JSON": False}
+
+
+def test_the_override_belongs_to_one_dossier():
+    _seed("screen-d5", maersk_last_line="1500.00")
+    _seed("screen-d6", maersk_last_line="1500.00")
+    at = _run(dossier_id="screen-d5")
+    at.checkbox(key="allow-export-with-errors-screen-d5").check().run()
+    other = _run(dossier_id="screen-d6")
+    assert other.checkbox(key="allow-export-with-errors-screen-d6").value is False
+    assert _downloads(other) == {"Download CSV": True, "Download JSON": True}
 
 
 def test_show_passed_checks_toggles():

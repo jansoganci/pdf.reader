@@ -81,6 +81,14 @@ def test_no_emoji_in_the_screen_code():
         assert not emoji.search(path.read_text()), path.name
 
 
+def test_the_checkbox_shows_its_ticked_state_and_its_focus():
+    css = _css("streamlit.css")
+    assert re.search(r'stCheckbox"\] label:has\(input:checked\) > span:first-of-type\s*\{[^}]*background-color:\s*var\(--accent\)', css)
+    assert re.search(r'stCheckbox"\] label:has\(input:focus-visible\)[^{]*\{[^}]*outline:\s*2px solid var\(--accent-text\)', css)
+    # The shorthand would wipe the tick image Streamlit draws on the box.
+    assert not re.search(r'stCheckbox"\][^{]*\{[^}]*\bbackground\s*:', css)
+
+
 def test_focus_is_a_solid_ring_and_is_never_removed():
     assert not re.search(r"outline\s*:\s*(none|0)\b", ALL_CSS)
     assert re.search(r"button:focus-visible\s*\{[^}]*outline:\s*2px solid var\(--accent-text\)", ALL_CSS)
