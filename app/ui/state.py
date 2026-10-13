@@ -7,10 +7,23 @@ so renaming a key would silently drop what a person typed when they switch paper
 
 import streamlit as st
 
+from app.ui.lang import DEFAULT_LANGUAGE
+
 
 def init() -> None:
     if "show_passed" not in st.session_state:
         st.session_state["show_passed"] = False
+
+
+# -- which language -------------------------------------------------------------
+
+LANGUAGE_KEY = "lang"  # the key of the FR/EN switch; its value is the language code
+
+
+def language() -> str:
+    """The language the person picked, or the default on the first run. The switch updates this key
+    before the script runs, so the choice shows on the same run."""
+    return st.session_state.get(LANGUAGE_KEY, DEFAULT_LANGUAGE)
 
 
 # -- which screen ----------------------------------------------------------------

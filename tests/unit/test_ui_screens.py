@@ -18,6 +18,7 @@ MAIN = str(Path(__file__).resolve().parents[2] / "app" / "ui" / "main.py")
 
 def _run(**session) -> AppTest:
     at = AppTest.from_file(MAIN, default_timeout=30)
+    at.session_state["lang"] = "en"  # the app opens in French; these tests read the English words
     for key, value in session.items():
         at.session_state[key.replace("__", "-")] = value
     return at.run()

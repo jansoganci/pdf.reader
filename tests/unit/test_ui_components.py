@@ -4,7 +4,6 @@ from pathlib import Path
 import pytest
 
 from app.ui.components import (
-    TIER_WORDS,
     badge,
     banner,
     chip,
@@ -14,6 +13,7 @@ from app.ui.components import (
     group_title,
     page_label,
     plain,
+    tier_word,
     totals_strip,
     wordmark,
 )
@@ -50,7 +50,7 @@ def test_banner_escapes_its_text_and_keeps_the_tier():
 def test_every_tier_has_a_glyph_a_badge_and_a_word(tier):
     assert "<svg" in badge(tier)
     assert f'class="badge {tier}"' in banner(tier, "x")
-    assert TIER_WORDS[tier] in chip(tier)
+    assert tier_word(tier) in chip(tier)
 
 
 def test_a_banner_has_no_side_bar_or_tint_hook():

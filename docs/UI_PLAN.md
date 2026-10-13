@@ -1,7 +1,7 @@
 # UI plan — new skin, clean structure
 
-> **Status: done (steps 0 to 7, plus D6 and the missing / edited markers).** Sections 0 to 12 are the
-> plan as agreed; sections 13 to 22 record what each step did and how it was checked.
+> **Status: done (steps 0 to 7, plus D6, the missing / edited markers and the French / English switch).** Sections 0 to 12 are the
+> plan as agreed; sections 13 to 23 record what each step did and how it was checked.
 
 Draft for review. Nothing here is built yet. The look is fixed by `docs/design.md`;
 this file decides **how the code is organised and in what order it is built**.
@@ -553,3 +553,35 @@ JSON or the CSV, the markup, the AppTest screens), `design/sample.html` regenera
 one Edited row). In the browser the licence tab shows two `Not on the page` rows in both themes,
 and a saved correction shows `Edited` after the label. The scripted tour and the injection probe
 give the same results as before.
+
+## 23. French and English (design.md §11, decision 1)
+
+**Decided by the owner:** a FR / EN switch, not French only. French on first load. Terms: Claude
+drafts, the accountants correct.
+
+**Built**
+
+- `app/ui/lang/`: `__init__.py` (`t`, `tn`, `use`, `has`), `en.py`, `fr.py`. One flat dictionary per
+  language, the same keys. The language is a context variable set at the top of every run
+  (`main.py`), so two sessions never share it, and pure code reads it without importing Streamlit.
+- Every sentence that was a literal in `words.py`, `view.py`, `components/`, `widgets/` and
+  `screens/` is now a key. `TIER_WORDS` and `NOT_ON_THE_PAGE` became functions (`tier_word`,
+  `not_on_the_page`). `file_status` (unused) was removed.
+- Checks are matched by rule id, passed ones too (they used to show validation's English message).
+  Refusals from `render_pdf` are mapped in `words.rejection_text`; an unknown one shows as it came.
+  Nothing below the UI changed.
+- `widgets/language.py`: the switch. Its label is fixed ("Langue / Language"): a label that follows
+  the language changes the widget's identity and Streamlit resets it (found in the browser, pinned by
+  a test).
+- "1 papers read" now reads "1 paper read" / "1 pièce lue".
+
+**Checked**
+
+- Tests: both catalogs have the same keys and slots; every key in code exists and none is dead; a
+  French view holds no English sentence; every refusal `render_pdf` can give has a French sentence;
+  the switch survives a rerun; one thread cannot change another's language.
+- Browser, 1440 px, both languages and both themes: no clipped text, no horizontal scroll, the
+  longest French strings (export row, banners, totals) fit.
+
+**Left alone, on purpose**: JSON / CSV, money formatting, Streamlit's own uploader text, and the
+page `lang` attribute (Streamlit sets it).

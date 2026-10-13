@@ -15,9 +15,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from app.ui import view  # noqa: E402
+from app.ui import lang, view  # noqa: E402
 from app.ui.components import banner, esc, field_label, group_title, page_label, plain, totals_strip, wordmark  # noqa: E402
-from app.ui.words import FILE_MANUAL  # noqa: E402
+from app.ui.words import FILE_MANUAL, manual_label  # noqa: E402
 from tests.ui_fixtures import maroc_dossier  # noqa: E402
 
 THEME = ROOT / "app" / "ui" / "theme"
@@ -88,6 +88,7 @@ def _row(row: view.RowView) -> str:
 
 
 def render() -> str:
+    lang.use("en")  # the sample is a design reference, kept in English
     dossier = maroc_dossier("sample")
     # One value shown as a person-corrected one, so the sample carries the Edited mark.
     next(doc for doc in dossier.documents if doc.id == "liquidation").fields["tax_amount"].user_value = "42266.00"
@@ -97,7 +98,7 @@ def render() -> str:
     position = paper.page_numbers.index(page)
 
     strip_fields = "".join(
-        f'<div class="field"><label class="label">{esc(label)}</label>{_input("", label)}</div>' for _, label in FILE_MANUAL
+        f'<div class="field"><label class="label">{esc(label)}</label>{_input("", label)}</div>' for label in map(manual_label, FILE_MANUAL)
     )
     tabs = "".join(
         f'<div class="tab{" on" if index == OPEN_TAB else ""}">{esc(item.tab_label)}</div>'

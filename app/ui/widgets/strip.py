@@ -1,7 +1,8 @@
 import streamlit as st
 
 from app.ui import state
-from app.ui.words import FILE_MANUAL
+from app.ui.lang import t
+from app.ui.words import FILE_MANUAL, manual_label
 
 
 def strip(manual: dict[str, str]) -> dict[str, str]:
@@ -9,7 +10,7 @@ def strip(manual: dict[str, str]) -> dict[str, str]:
     st.markdown('<div class="topbar-strip-marker"></div>', unsafe_allow_html=True)
     columns = st.columns([1, 1, 3], vertical_alignment="bottom")
     typed: dict[str, str] = {}
-    for index, (key, label) in enumerate(FILE_MANUAL):
-        typed[key] = columns[index].text_input(label, value=manual.get(key, ""), key=state.file_key(key))
-    columns[2].caption("Not on any page. Saved with the open paper's Save button below.")
+    for index, key in enumerate(FILE_MANUAL):
+        typed[key] = columns[index].text_input(manual_label(key), value=manual.get(key, ""), key=state.file_key(key))
+    columns[2].caption(t("strip.note"))
     return typed

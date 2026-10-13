@@ -1,48 +1,10 @@
+"""The paper's terms and sentences, looked up in the current language (`app/ui/lang`)."""
+
+import re
 from decimal import Decimal, InvalidOperation
 
 from app.models import DocumentRecord, FieldValue
-
-PAPER_NAMES = {
-    "supplier_invoice": "Supplier invoice",
-    "import_licence": "Import licence",
-    "customs_declaration": "Customs declaration",
-    "customs_liquidation": "Customs payment",
-    "carrier_invoice": "Shipping invoice",
-    "logistics_invoice": "Logistics invoice",
-    "broker_invoice": "Broker invoice",
-    "unknown": "Other page",
-}
-
-FIELD_NAMES = {
-    "supplier_name": "Issued by",
-    "document_number": "Number",
-    "document_date": "Date",
-    "currency": "Currency",
-    "net_amount": "Net",
-    "tax_amount": "Tax",
-    "total_amount": "Total",
-    "fob_amount": "FOB",
-    "freight_amount": "Freight",
-    "customs_value": "Customs value",
-    "exchange_rate": "Exchange rate",
-    "insurance_amount": "Insurance",
-    "bill_of_lading": "Bill of lading",
-    "containers": "Containers",
-    "hs_code": "HS code",
-    "package_count": "Packages",
-    "regime": "Regime",
-}
-
-NUMBER_NAMES = {
-    "supplier_invoice": "Invoice number",
-    "import_licence": "Licence number",
-    "customs_declaration": "Declaration number",
-    "customs_liquidation": "Payment number",
-    "carrier_invoice": "Invoice number",
-    "logistics_invoice": "Invoice number",
-    "broker_invoice": "Invoice number",
-    "unknown": "Number",
-}
+from app.ui.lang import has, t
 
 COPY_FIELDS = {
     "supplier_invoice": [
@@ -75,28 +37,24 @@ COPY_FIELDS = {
     "unknown": ["supplier_name", "document_number", "document_date", "total_amount"],
 }
 
-NOT_ON_THE_PAGE = "Not on the page"  # shown in place of printed text when a field was not read
+# Keys of the values a person types. The labels are `manual.<key>` in the catalog.
+FILE_MANUAL = ("order_number", "sap_exchange_rate")
 
-FILE_MANUAL = (
-    ("order_number", "Order number"),
-    ("sap_exchange_rate", "Exchange rate you enter"),
-)
-
-PAPER_MANUAL = (
-    ("vendor_code", "Vendor code"),
-    ("posting_date", "Posting date"),
-    ("tax_code", "Tax code"),
-    ("reason_code", "Reason code"),
-    ("gl_account", "G/L account"),
-)
+PAPER_MANUAL = ("vendor_code", "posting_date", "tax_code", "reason_code", "gl_account")
 
 # Broker invoices (Transit Trust and others) carry a different tax code and
 # reason code per service line, not one for the whole paper. Maersk, ONCF,
 # and every other paper type keep the single pair in PAPER_MANUAL above.
-LINE_MANUAL = (
-    ("tax_code", "Tax code"),
-    ("reason_code", "Reason code"),
-)
+LINE_MANUAL = ("tax_code", "reason_code")
+
+
+def manual_label(key: str) -> str:
+    return t(f"manual.{key}")
+
+
+def not_on_the_page() -> str:
+    """Shown in place of printed text when a field was not read."""
+    return t("form.not_on_page")
 
 
 def shown_keys(document: DocumentRecord) -> list[str]:
@@ -109,25 +67,17 @@ def shown_keys(document: DocumentRecord) -> list[str]:
     return [key for key in keys if key in document.fields]
 
 
-FILE_STATUS = {
-    "needs_review": "Needs a check",
-    "ready_to_export": "Ready to download",
-    "failed": "Could not be read",
-}
-
-
 def paper_name(document_type: str) -> str:
-    return PAPER_NAMES.get(document_type, "Other page")
+    key = f"paper.{document_type}"
+    return t(key if has(key) else "paper.unknown")
 
 
 def field_name(document_type: str, key: str) -> str:
     if key == "document_number":
-        return NUMBER_NAMES.get(document_type, "Number")
-    return FIELD_NAMES.get(key, key.replace("_", " ").capitalize())
-
-
-def file_status(status: str) -> str:
-    return FILE_STATUS.get(status, "Needs a check")
+        number = f"number.{document_type}"
+        return t(number if has(number) else "number.unknown")
+    name = f"field.{key}"
+    return t(name) if has(name) else key.replace("_", " ").capitalize()
 
 
 def shown_value(field: FieldValue):
@@ -149,35 +99,47 @@ def money_text(value, currency: str | None) -> str:
 
 def pages_text(pages: list[int]) -> str:
     if not pages:
-        return "No pages"
+        return t("pages.none")
     if len(pages) == 1:
-        return f"Page {pages[0]}"
+        return t("pages.one", first=pages[0])
     if pages == list(range(pages[0], pages[-1] + 1)):
-        return f"Pages {pages[0]}–{pages[-1]}"
-    return "Pages " + ", ".join(str(page) for page in pages)
+        return t("pages.range", first=pages[0], last=pages[-1])
+    return t("pages.list", list=", ".join(str(page) for page in pages))
 
 
-FAILED_CHECKS = {
-    "lines_sum_to_total": "The lines on the page do not add up to the amount before tax.",
-    "net_plus_tax": "Net plus tax does not equal the total.",
-    "fob_plus_freight": "FOB plus freight does not equal the total.",
-    "supplier_equals_licence": "The supplier total does not match the import licence.",
-    "customs_value_matches": "The customs value is not the same on both customs papers.",
-    "bill_of_lading_matches": "The bill of lading is not the same on every paper.",
-    "containers_match": "The containers are not the same on every paper.",
-    "duplicate_invoice_number": "The same number appears on two papers.",
-    "supported_currency": "This currency needs a check.",
-}
-
-
-def check_sentence(rule_id: str, message: str, paper: str | None) -> str:
+def check_sentence(rule_id: str, message: str, paper: str | None, passed: bool = False) -> str:
+    """One check as a sentence. Matched by rule id; a rule the catalog does not know shows the
+    message validation gave it."""
     if rule_id == "missing_document_type":
         code = message.split(" ", 1)[0]
-        return f"{paper_name(code)} was not in this file."
-    sentence = FAILED_CHECKS.get(rule_id, message)
+        return t("check.missing_document", paper=paper_name(code))
+    key = f"check.{'passed' if passed else 'failed'}.{rule_id}"
+    sentence = t(key) if has(key) else message
     if paper:
-        return f"{paper}: {sentence}"
+        return t("check.with_paper", paper=paper, sentence=sentence)
     return sentence
+
+
+_REJECTIONS = {
+    "File was not accepted. The limit is 30 MB.": "reject.too_big",
+    "File was not accepted. Upload one PDF.": "reject.not_pdf",
+    "File could not be opened.": "reject.unreadable",
+    "File was not accepted. Encrypted PDFs are not supported.": "reject.encrypted",
+    "File could not be opened. A page image is too large.": "reject.page_too_large",
+}
+_PAGE_LIMIT = re.compile(r"^File was not accepted\. The limit is (\d+) pages\.$")
+
+
+def rejection_text(message: str) -> str:
+    """The reason a PDF was refused, in the current language. `render_pdf` words its refusals in
+    English; a refusal this does not know is shown as it came."""
+    key = _REJECTIONS.get(message)
+    if key:
+        return t(key)
+    match = _PAGE_LIMIT.match(message)
+    if match:
+        return t("reject.too_many_pages", limit=match.group(1))
+    return message
 
 
 def issued_by(document: DocumentRecord) -> str | None:

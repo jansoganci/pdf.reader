@@ -1,6 +1,7 @@
 import streamlit as st
 
 from app.ui.components import wordmark
+from app.ui.lang import t
 from app.ui.view import DossierView
 
 
@@ -10,4 +11,4 @@ def header(screen: DossierView) -> bool:
     with left:
         st.markdown(wordmark(screen.filename, screen.paper_count, screen.tier), unsafe_allow_html=True)
     with right:
-        return st.button("Read another file", width="stretch")
+        return st.button(t("header.read_another"), width="stretch")

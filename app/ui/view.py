@@ -12,12 +12,14 @@ what validation already found.
 from dataclasses import dataclass
 
 from app.models import DocumentRecord, Dossier, ValidationResult
-from app.ui.components import TIER_WORDS
+from app.ui.components import tier_word
+from app.ui.lang import t
 from app.ui.words import (
     PAPER_MANUAL,
-    check_sentence as failed_check_sentence,
+    check_sentence as rule_sentence,
     field_name,
     issued_by,
+    manual_label,
     money_text,
     pages_text,
     paper_name,
@@ -30,12 +32,12 @@ MONEY_KEYS = {
     "freight_amount", "customs_value", "insurance_amount",
 }
 
-# Headline figures above the paper tabs: (document type, label, field).
+# Headline figures above the paper tabs: (document type, catalog key of the label, field).
 TOTALS = (
-    ("supplier_invoice", "Supplier invoice", "total_amount"),
-    ("customs_declaration", "Customs value", "customs_value"),
-    ("customs_liquidation", "Customs payment", "total_amount"),
-    ("carrier_invoice", "Shipping invoice", "total_amount"),
+    ("supplier_invoice", "paper.supplier_invoice", "total_amount"),
+    ("customs_declaration", "field.customs_value", "customs_value"),
+    ("customs_liquidation", "paper.customs_liquidation", "total_amount"),
+    ("carrier_invoice", "paper.carrier_invoice", "total_amount"),
 )
 
 LINE_CODE_TYPES = ("broker_invoice",)  # one tax code and one reason code per service line
@@ -160,9 +162,7 @@ def check_sentence(dossier: Dossier, item: ValidationResult) -> str:
         if found is not None:
             names.append(paper_name(found.document_type))
     paper = names[0] if len(names) == 1 else None
-    if item.status == "passed":
-        return f"{paper}: {item.message}" if paper else item.message
-    return failed_check_sentence(item.rule_id, item.message, paper)
+    return rule_sentence(item.rule_id, item.message, paper, passed=item.status == "passed")
 
 
 def tab_label(document: DocumentRecord) -> str:
@@ -185,13 +185,13 @@ def default_page(document: DocumentRecord) -> int | None:
 
 def paper_manual_fields(document_type: str) -> list[tuple[str, str]]:
     """The values a person types for one paper, which no paper prints."""
-    fields = list(PAPER_MANUAL)
+    keys = list(PAPER_MANUAL)
     if document_type in LINE_CODE_TYPES:
         # Each service line gets its own tax code and reason code instead.
-        fields = [(key, label) for key, label in fields if key not in ("tax_code", "reason_code")]
+        keys = [key for key in keys if key not in ("tax_code", "reason_code")]
     if document_type in CUSTOMS_TYPES:
-        fields = fields + [("sap_reference", "SAP reference")]
-    return fields
+        keys.append("sap_reference")
+    return [(key, manual_label(key)) for key in keys]
 
 
 def review_count(dossier: Dossier) -> int:
@@ -210,30 +210,32 @@ def dossier_tier(dossier: Dossier) -> str:
 
 def banner_text(tier: str, failed_count: int, blocking_count: int, review_values: int = 0) -> str:
     if tier == "crit":
-        return f"{blocking_count} item(s) block the download until you check them."
+        return t("banner.crit", n=blocking_count)
     if tier == "warn":
         if failed_count:
-            return f"{failed_count} item(s) might need a second look before you download."
-        return f"{review_values} value(s) might need a second look before you download."
-    return TIER_WORDS["good"] + "."
+            return t("banner.warn_checks", n=failed_count)
+        return t("banner.warn_values", n=review_values)
+    return tier_word("good") + "."
 
 
 def totals(dossier: Dossier) -> tuple[TotalsCell, ...]:
     cells = []
-    for kind, label, key in TOTALS:
+    for kind, label_key, key in TOTALS:
         found = next((item for item in dossier.documents if item.document_type == kind), None)
         if found is None:
             continue
         field = found.fields.get(key)
         who = issued_by(found)
         if kind == "customs_declaration":
-            sub = "Copied from the customs papers"
+            sub = t("totals.customs_source")
         elif who:
-            sub = f"Issued by {who}"
+            sub = t("totals.issued_by", who=who)
         else:
             sub = ""
         cells.append(
-            TotalsCell(label, display(found, key) or "Not read", sub, field is not None and field.status == "review")
+            TotalsCell(
+                t(label_key), display(found, key) or t("totals.not_read"), sub, field is not None and field.status == "review"
+            )
         )
     return tuple(cells)
 
@@ -272,9 +274,9 @@ def _lines(document: DocumentRecord) -> tuple[LineView, ...]:
 def _typed_notes(document_type: str) -> tuple[str, ...]:
     notes = []
     if document_type == "customs_liquidation":
-        notes.append("Payment number above is the liquidation number. SAP reference stays empty until you type it.")
+        notes.append(t("form.liquidation_note"))
     if document_type in LINE_CODE_TYPES:
-        notes.append("Each service line above has its own Tax code and Reason code.")
+        notes.append(t("form.line_codes_note"))
     return tuple(notes)
 
 
@@ -284,7 +286,7 @@ def _paper(dossier: Dossier, document: DocumentRecord, position: int) -> PaperVi
         bit
         for bit in (
             pages_text(document.page_numbers),
-            f"Issued by {who}" if who else "",
+            t("totals.issued_by", who=who) if who else "",
             headline_amount(document),
         )
         if bit

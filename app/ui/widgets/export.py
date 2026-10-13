@@ -1,5 +1,7 @@
 import streamlit as st
 
+from app.ui.lang import t
+
 
 def export_row(
     csv: bytes | None,
@@ -20,11 +22,11 @@ def export_row(
     columns = st.columns([1, 1, 4], vertical_alignment="center")
     ready = csv is not None and json is not None
     columns[0].download_button(
-        "Download CSV", csv or b"", file_name="fields.csv", disabled=not ready, width="stretch"
+        t("export.csv"), csv or b"", file_name="fields.csv", disabled=not ready, width="stretch"
     )
     columns[1].download_button(
-        "Download JSON", json or b"", file_name="import-file.json", type="primary", disabled=not ready, width="stretch"
+        t("export.json"), json or b"", file_name="import-file.json", type="primary", disabled=not ready, width="stretch"
     )
     if show_override:
-        return columns[2].checkbox("Download anyway — errors are not fixed yet", key=override_key)
+        return columns[2].checkbox(t("export.override"), key=override_key)
     return overridden

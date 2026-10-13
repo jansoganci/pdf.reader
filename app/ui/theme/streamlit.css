@@ -159,6 +159,22 @@ button { white-space: nowrap !important; }
     outline-offset: 2px;
 }
 
+/* Radio (the FR / EN switch). The circle is the label's first child. Unticked: surface with an edge;
+   ticked: accent fill (the white dot stays). */
+.stApp [data-testid="stRadio"] label[data-baseweb="radio"] > div:first-child {
+    background-color: var(--surface) !important;
+    border: 1px solid var(--edge) !important;
+}
+.stApp [data-testid="stRadio"] label[data-baseweb="radio"]:has(input:checked) > div:first-child {
+    background-color: var(--accent) !important;
+    border-color: var(--accent) !important;
+}
+.stApp [data-testid="stRadio"] label[data-baseweb="radio"]:has(input:focus-visible) > div:first-child {
+    outline: 2px solid var(--accent-text);
+    outline-offset: 2px;
+}
+.stApp [data-testid="stRadio"] label[data-baseweb="radio"] p { color: var(--ink) !important; font-size: 14px !important; }
+
 /* The reading screen's status block. */
 .stApp details {
     background: var(--surface) !important;

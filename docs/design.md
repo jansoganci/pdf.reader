@@ -138,10 +138,13 @@ field adds its name there. Do not put a user-facing string in `main.py` that
 - Empty is empty. A totals figure says `Not read` only where a whole figure is
   absent; a field row stays blank.
 
-**Language.** The screen is English today. `UI_REVIEW.md` §7 recommends French
-(the papers are French, SAP may be French). That decision is still open — see
-§11. Until it is made, write new strings in English and keep them in
-`words.py` so the switch is one file.
+**Language.** The screen speaks French or English, chosen with the FR / EN switch at the top
+right (French on first load: the papers are French). Every sentence lives in
+`app/ui/lang/en.py` and `fr.py` under the same keys; code asks for a key (`t("start.heading")`)
+and never holds a sentence. A new string needs both languages (a test checks the keys and the
+`{slots}` match). The French terms are a draft for the two accountants to correct. What stays
+English: the JSON and CSV (keys, file names), money formatting (`18,921.09 EUR`), the text of
+the uploader that Streamlit draws itself, and the page's `lang` attribute.
 
 ---
 
@@ -498,10 +501,11 @@ live app. Real, small, and worth fixing before building on top.
 
 Each needs an answer from the business or the owner. None blocks the work in §12.
 
-1. **Screen language: English or French?** The papers are French; the SAP GUI
-   language is unknown. For French: removes a translation step from the most
-   repeated action. Against: the code, docs, and prompts are English. Needs the
-   two accountants.
+1. ~~Screen language: English or French?~~ **Decided and built: both**, with an FR / EN switch,
+   French first. The French wording is a draft; the accountants correct it in
+   `app/ui/lang/fr.py` (one file). Money is still shown as `18,921.09 EUR`; a French format
+   (`18 921,09`) would change what a person types and what is compared, so it is left for a
+   separate decision.
 2. ~~Self-host the fonts, or keep Google Fonts?~~ **Decided: in the repo** (step 1).
 3. ~~How should `missing` look?~~ **Decided and built:** a quiet `Not on the page` caption in
    the *Printed text* column. It is UI only: the value stays blank, and the words never reach

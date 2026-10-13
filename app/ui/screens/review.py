@@ -12,6 +12,7 @@ from app.service import (
 )
 from app.ui import state, view, widgets
 from app.ui.components import banner, plain, totals_strip
+from app.ui.lang import t
 
 
 @st.cache_data(show_spinner=False)
@@ -23,7 +24,7 @@ def render(dossier_id: str) -> None:
     """Check one dossier: header, export, state, totals, then one tab per paper."""
     dossier = get_dossier(dossier_id)
     if dossier is None or not dossier.documents:
-        st.markdown(banner("crit", "This file could not be opened."), unsafe_allow_html=True)
+        st.markdown(banner("crit", t("review.cannot_open")), unsafe_allow_html=True)
         st.stop()
 
     screen = view.build(dossier)
@@ -38,7 +39,7 @@ def render(dossier_id: str) -> None:
     banner_column, passed_column = st.columns([5, 1], vertical_alignment="center")
     banner_column.markdown(banner(screen.tier, screen.banner_text), unsafe_allow_html=True)
     if passed_column.button(
-        "Hide passed checks" if state.show_passed() else "Show passed checks", width="stretch"
+        t("review.hide_passed") if state.show_passed() else t("review.show_passed"), width="stretch"
     ):
         state.toggle_show_passed()
         st.rerun()
@@ -66,7 +67,7 @@ def _export_area(dossier, screen: view.DossierView) -> None:
             csv = json = None
     state.init_override(dossier.id, dossier.export_with_errors)
     with st.container():
-        st.caption("Export")
+        st.caption(t("review.export"))
         allowed = widgets.export_row(
             csv, json,
             show_override=blocked,

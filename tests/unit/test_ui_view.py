@@ -238,11 +238,13 @@ def test_nothing_is_marked_edited_until_a_person_edits():
 
 def test_the_not_on_the_page_words_never_reach_an_export():
     from app.export.writers import dossier_json, fields_csv
-    from app.ui.words import NOT_ON_THE_PAGE
+    from app.ui import lang
 
     dossier = maroc_dossier()
-    assert NOT_ON_THE_PAGE not in fields_csv(dossier)
-    assert NOT_ON_THE_PAGE not in dossier_json(dossier)
+    for code in lang.LANGUAGES:
+        words = lang.CATALOGS[code]["form.not_on_page"]
+        assert words not in fields_csv(dossier)
+        assert words not in dossier_json(dossier)
 
 
 # -- totals strip --------------------------------------------------------------------
