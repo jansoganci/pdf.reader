@@ -397,3 +397,40 @@ Two small design decisions made while building, both inside the plan's rules:
 
 The code is now laid out as planned; what remains in `docs/UI_PLAN.md` section 9 is the
 skin (step 5), the visual pass (step 6), and the clean-up of the old mock and doc (step 7).
+
+## 18. Step 5 results (done): the new skin
+
+The look in `docs/design.md` sections 5 and 7 is now the look of the app.
+
+**What changed on screen**
+
+| Area | Before | Now |
+|---|---|---|
+| Colours | indigo, zinc greys, pastel status tints | paper and desk neutrals, ballpoint blue for actions, three status colours as fills (`tokens.css`) |
+| Type | Inter, never actually applied (F8) | IBM Plex Sans forced onto Streamlit's own text; Plex Mono for the *Printed text* column only; served from `app/ui/static/fonts` |
+| Banner | tinted box with a coloured bar on its edge (the crescent) | paper, hairline, square badge with a glyph, sentence in ink |
+| Status labels | pale pill with a dot | filled chip, no dot; same chip in the header |
+| Headline figures | four boxed cards with shadows | one ruled strip |
+| Form panel | lifted card with a shadow | flat paper with a hairline; column headings moved inside it (F2); rows divided by rules and centred on the input |
+| Header | emoji tile + title | plain wordmark |
+| Radii, depth | 10 / 14 / 20 px, shadows | 3 / 4 / 6 px, no shadows anywhere |
+| Page and form widths | 2 : 1 (form squeezed, F3) | 5 : 6 |
+| Header strip | a small (i) glyph with a tooltip | the note written out |
+| Messages | Streamlit's tinted alert boxes | our banner |
+| Upload box | "Limit 200MB" (F5) | "Limit 30MB", from `--server.maxUploadSize 30` in the README run command |
+
+**Guards added** (`tests/unit/test_design_rules.py`, 14 tests): no side-bar borders, no
+shadows, no radius above 6 px or circle or pill, no gradients, no Inter and no outside font
+host, none of the old indigo, zinc or pastel hex values, hex colours only in `tokens.css`,
+no emoji in screen code, every font file the CSS names exists, the README run command keeps
+the upload limit equal to `max_upload_bytes`, and **contrast floors computed from the tokens
+for both themes** (text 4.5:1, control borders and focus rings 3:1).
+
+**Checks.** Tests: 105 to 119, all green. The same scripted browser tour as steps 3 and 4
+gives an identical behaviour log. The injection probe is clean. Real uploads still work (a
+valid PDF opens a review screen; a non-PDF shows the banner and a Back button).
+
+**Left for step 6** (the visual pass): the reading screen's status block still has a
+slightly tinted header from Streamlit; the drop zone, checkbox when ticked, and select menu
+popup need a look in both themes; the export area still swaps its buttons for the override
+box (D6, deferred); Streamlit's own element spacing around the banner row.

@@ -24,9 +24,13 @@ def paper_form(paper: view.PaperView, manual: dict[str, str]) -> FormResult | No
     """
     with st.form(state.form_key(paper.id)):
         st.markdown(group_title("Copied from the page"), unsafe_allow_html=True)
+        head = st.columns([1.3, 1.6, 1.5])
+        head[0].caption("Field")
+        head[1].caption("Value")
+        head[2].caption("Printed text")
         typed_values: dict[str, tuple[str, str]] = {}
         for row in paper.rows:
-            label, value_col, printed = st.columns([1.3, 1.6, 1.5])
+            label, value_col, printed = st.columns([1.3, 1.6, 1.5], vertical_alignment="center")
             label.markdown(field_label(row.label, row.needs_check), unsafe_allow_html=True)
             new_value = value_col.text_input(
                 row.label,
@@ -34,7 +38,7 @@ def paper_form(paper: view.PaperView, manual: dict[str, str]) -> FormResult | No
                 key=state.value_key(paper.id, row.key),
                 label_visibility="collapsed",
             )
-            printed.markdown(plain(row.printed_text), unsafe_allow_html=True)
+            printed.markdown(plain(row.printed_text, "printed"), unsafe_allow_html=True)
             typed_values[row.key] = (row.value_text, new_value)
 
         line_typed: dict[str, str] = {}

@@ -60,7 +60,7 @@ def test_the_start_screen_asks_for_a_pdf():
 def test_pressing_read_without_a_file_warns():
     at = _run()
     at.button[0].click().run()
-    assert at.warning[0].value == "Choose a PDF first."
+    assert "Choose a PDF first." in _text(at)
 
 
 def test_a_waiting_pdf_is_read_and_its_dossier_opens():
@@ -73,7 +73,7 @@ def test_a_waiting_pdf_is_read_and_its_dossier_opens():
 def test_a_bad_file_shows_the_reason_and_a_way_back():
     at = _run(pending={"name": "x.pdf", "data": b"not a pdf"})
     assert not at.exception
-    assert at.error[0].value == "File was not accepted. Upload one PDF."
+    assert "File was not accepted. Upload one PDF." in _text(at)
     assert "pending" not in at.session_state  # the bad file is forgotten
     at.button[0].click().run()
     assert at.header[0].value == "Would you like to read a new import file?"
@@ -189,7 +189,7 @@ def test_the_first_paper_has_no_join_button():
 def test_a_missing_dossier_says_so():
     at = _run(dossier_id="does-not-exist")
     assert not at.exception
-    assert at.info[0].value == "This file could not be opened."
+    assert "This file could not be opened." in _text(at)
 
 
 def test_read_another_file_returns_to_the_start_screen():

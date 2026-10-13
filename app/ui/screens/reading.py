@@ -3,7 +3,7 @@ import streamlit as st
 from app.pdf.render import PdfRejected
 from app.service import process_upload
 from app.ui import state
-from app.ui.components import plain
+from app.ui.components import banner, plain
 
 
 def render(pending: dict) -> None:
@@ -26,7 +26,7 @@ def render(pending: dict) -> None:
 
 def _fail(message: str) -> None:
     state.clear_pending()
-    st.error(message)
+    st.markdown(banner("crit", message), unsafe_allow_html=True)
     if st.button("Back"):
         state.go_home()
     st.stop()

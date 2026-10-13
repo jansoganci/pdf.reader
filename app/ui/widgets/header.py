@@ -6,8 +6,8 @@ from app.ui.view import DossierView
 
 def header(screen: DossierView) -> bool:
     """The wordmark row. Returns True when the person pressed `Read another file`."""
-    left, right = st.columns([3, 1])
+    left, right = st.columns([5, 1], vertical_alignment="center")
     with left:
         st.markdown(wordmark(screen.filename, screen.paper_count, screen.tier), unsafe_allow_html=True)
     with right:
-        return st.button("Read another file")
+        return st.button("Read another file", width="stretch")

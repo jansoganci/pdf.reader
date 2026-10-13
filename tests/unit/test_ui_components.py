@@ -5,15 +5,15 @@ import pytest
 
 from app.ui.components import (
     TIER_WORDS,
+    badge,
     banner,
+    chip,
     esc,
     field_label,
     group_title,
     page_label,
     plain,
-    status_pill,
-    summary_card,
-    tag,
+    totals_strip,
     wordmark,
 )
 
@@ -46,39 +46,57 @@ def test_banner_escapes_its_text_and_keeps_the_tier():
 
 
 @pytest.mark.parametrize("tier", ["good", "warn", "crit"])
-def test_every_tier_has_an_icon_and_a_word(tier):
-    assert "<svg" in banner(tier, "x")
-    assert TIER_WORDS[tier] in tag(tier)
-    assert TIER_WORDS[tier] in status_pill(tier)
+def test_every_tier_has_a_glyph_a_badge_and_a_word(tier):
+    assert "<svg" in badge(tier)
+    assert f'class="badge {tier}"' in banner(tier, "x")
+    assert TIER_WORDS[tier] in chip(tier)
 
 
-def test_tag_and_pill_markup():
-    assert tag("warn") == '<span class="tag warn">Needs a check</span>'
-    assert status_pill("crit") == '<span class="status-pill crit">Blocks download</span>'
+def test_a_banner_has_no_side_bar_or_tint_hook():
+    # Status colour lives in the badge only; the sentence is a plain span.
+    out = banner("warn", "x")
+    assert out == (
+        f'<div class="banner warn">{badge("warn")}<span class="banner-text">x</span></div>'
+    )
 
 
-def test_summary_card_escapes_every_field():
-    out = summary_card(HOSTILE, HOSTILE, HOSTILE, needs_check=True)
+def test_chip_markup_has_the_word_and_no_dot():
+    assert chip("warn") == '<span class="chip warn">Needs a check</span>'
+    assert chip("crit") == '<span class="chip crit">Blocks download</span>'
+    assert "::before" not in chip("good") and "<i" not in chip("good")
+
+
+class _Cell:
+    def __init__(self, label, amount, sub, needs_check):
+        self.label, self.amount, self.sub, self.needs_check = label, amount, sub, needs_check
+
+
+def test_totals_strip_escapes_every_field():
+    out = totals_strip([_Cell(HOSTILE, HOSTILE, HOSTILE, True)])
     _no_live_markup(out)
-    assert out.count('class="tag warn"') == 1
+    assert out.count('class="chip warn"') == 1
 
 
-def test_summary_card_without_a_check_has_no_tag():
-    assert "tag" not in summary_card("Supplier invoice", "18,921.09 EUR", "Issued by X", needs_check=False)
+def test_totals_strip_has_one_cell_per_figure_and_a_chip_only_when_flagged():
+    out = totals_strip([_Cell("A", "1.00 EUR", "x", False), _Cell("B", "2.00 MAD", "", True)])
+    assert out.count('class="totals-cell"') == 2
+    assert out.count("chip") == 1
+    assert out.startswith('<div class="totals">')
 
 
 def test_wordmark_escapes_the_file_name():
     out = wordmark(HOSTILE, 8, "warn")
     _no_live_markup(out)
     assert "8 papers read" in out
-    assert 'class="status-pill warn"' in out
+    assert 'class="chip warn"' in out
+    assert "📄" not in out  # a plain name in type, no emoji tile
 
 
 def test_field_label_and_group_title_escape():
     _no_live_markup(field_label(HOSTILE, needs_check=True))
     _no_live_markup(group_title(HOSTILE))
     assert field_label("Issued by") == "Issued by"
-    assert field_label("Total", needs_check=True) == 'Total <span class="tag warn">Needs a check</span>'
+    assert field_label("Total", needs_check=True) == 'Total <span class="chip warn">Needs a check</span>'
 
 
 def test_plain_is_an_escaped_html_block():
@@ -86,6 +104,7 @@ def test_plain_is_an_escaped_html_block():
     _no_live_markup(out)
     assert out.startswith('<div class="pdf-caption">') and out.endswith("</div>")
     assert plain("Maersk A/S", "body") == '<div class="pdf-body">Maersk A/S</div>'
+    assert plain("Maersk A/S", "printed") == '<div class="pdf-printed">Maersk A/S</div>'
 
 
 def test_plain_starts_with_a_tag_so_markdown_does_not_parse_it():

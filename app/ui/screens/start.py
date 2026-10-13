@@ -1,6 +1,7 @@
 import streamlit as st
 
 from app.ui import state
+from app.ui.components import banner
 
 
 def render() -> None:
@@ -10,7 +11,7 @@ def render() -> None:
     uploaded = st.file_uploader("Import PDF", type=["pdf"])
     if st.button("Read this PDF", type="primary"):
         if uploaded is None:
-            st.warning("Choose a PDF first.")
+            st.markdown(banner("warn", "Choose a PDF first."), unsafe_allow_html=True)
         else:
             state.set_pending(uploaded.name, uploaded.getvalue())
             st.rerun()

@@ -1,68 +1,78 @@
-/* Tokens: the only place for colours, radii and shadows. Dark values are repeated
-   under the OS media query and under [data-theme]. See docs/design.md section 5. */
+/* Tokens: the only place for colours, radii and fonts. Light values on :root; dark values are
+   repeated under the OS media query and under [data-theme="dark"], so a manual toggle can be added
+   without touching a colour anywhere else. See docs/design.md section 5. No shadows exist on purpose. */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
-/* Design tokens — see docs/DESIGN_SYSTEM.md. Light values on :root; dark
-   values repeated under both the OS media query and a [data-theme]
-   attribute, so a manual theme toggle can be wired in later without
-   touching a single color value anywhere else. */
 :root {
-    --bg: #fafafa;
-    --surface: #ffffff;
-    --surface-sunken: #f4f4f5;
-    --border: #e4e4e7;
+    --bg: #eeece5;
+    --surface: #fbfaf6;
+    --surface-sunken: #e6e3da;
+    --rule: #d9d5c9;
+    --edge: #8a8578;
+    --ink: #16181d;
+    --ink-secondary: #4a4d55;
+    --accent: #1f3d8f;
+    --accent-hover: #17306f;
+    --accent-text: #1f3d8f;
+    --on-accent: #ffffff;
+    --review-fill: #f2d144;
+    --on-review: #16181d;
+    --review-text: #7a5b00;
+    --crit-fill: #a3231b;
+    --on-crit: #ffffff;
+    --crit-text: #a3231b;
+    --good-fill: #2d6a3e;
+    --on-good: #ffffff;
+    --good-text: #2d6a3e;
 
-    --ink: #18181b;
-    --ink-secondary: #52525b;
-    --ink-muted: #a1a1aa;
-
-    --accent: #4f46e5;
-    --accent-hover: #4338ca;
-    --accent-text: #4f46e5;
-    --accent-soft: #eef2ff;
-
-    --good-text: #166534; --good-bg: #dcfce7; --good-strong: #16a34a;
-    --warn-text: #92400e; --warn-bg: #fef3c7; --warn-strong: #f59e0b;
-    --crit-text: #991b1b; --crit-bg: #fee2e2; --crit-strong: #dc2626;
-
-    --radius-sm: 10px;
-    --radius-md: 14px;
-    --radius-lg: 20px;
-    --shadow-sm: 0 1px 3px rgba(16,24,40,.08), 0 1px 2px rgba(16,24,40,.04);
-    --shadow-md: 0 4px 12px rgba(16,24,40,.08), 0 2px 4px rgba(16,24,40,.04);
+    --radius-sm: 3px;
+    --radius-md: 4px;
+    --radius-lg: 6px;
+    --font-sans: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
 }
 @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-        --bg: #0f0f12;
-        --surface: #18181b;
-        --surface-sunken: #0f0f12;
-        --border: #2a2a2e;
-        --ink: #f4f4f5;
-        --ink-secondary: #a1a1aa;
-        --ink-muted: #71717a;
-        --accent-text: #a5b4fc;
-        --accent-soft: #1e1b4b;
-        --good-text: #4ade80; --good-bg: #14281d; --good-strong: #22c55e;
-        --warn-text: #fbbf24; --warn-bg: #2b2111; --warn-strong: #f59e0b;
-        --crit-text: #f87171; --crit-bg: #2c1515; --crit-strong: #ef4444;
-        --shadow-sm: none;
-        --shadow-md: none;
+        --bg: #101216;
+        --surface: #181b21;
+        --surface-sunken: #0c0e11;
+        --rule: #2a2e37;
+        --edge: #7b8394;
+        --ink: #ecebe6;
+        --ink-secondary: #a9adb8;
+        --accent: #3d62c8;
+        --accent-hover: #2f52b0;
+        --accent-text: #9db4f2;
+        --on-accent: #ffffff;
+        --review-fill: #e3c53c;
+        --on-review: #16181d;
+        --review-text: #e3c53c;
+        --crit-fill: #e2635a;
+        --on-crit: #1a0a09;
+        --crit-text: #e2635a;
+        --good-fill: #5bb273;
+        --on-good: #08170d;
+        --good-text: #5bb273;
     }
 }
 :root[data-theme="dark"] {
-    --bg: #0f0f12;
-    --surface: #18181b;
-    --surface-sunken: #0f0f12;
-    --border: #2a2a2e;
-    --ink: #f4f4f5;
-    --ink-secondary: #a1a1aa;
-    --ink-muted: #71717a;
-    --accent-text: #a5b4fc;
-    --accent-soft: #1e1b4b;
-    --good-text: #4ade80; --good-bg: #14281d; --good-strong: #22c55e;
-    --warn-text: #fbbf24; --warn-bg: #2b2111; --warn-strong: #f59e0b;
-    --crit-text: #f87171; --crit-bg: #2c1515; --crit-strong: #ef4444;
-    --shadow-sm: none;
-    --shadow-md: none;
+    --bg: #101216;
+    --surface: #181b21;
+    --surface-sunken: #0c0e11;
+    --rule: #2a2e37;
+    --edge: #7b8394;
+    --ink: #ecebe6;
+    --ink-secondary: #a9adb8;
+    --accent: #3d62c8;
+    --accent-hover: #2f52b0;
+    --accent-text: #9db4f2;
+    --on-accent: #ffffff;
+    --review-fill: #e3c53c;
+    --on-review: #16181d;
+    --review-text: #e3c53c;
+    --crit-fill: #e2635a;
+    --on-crit: #1a0a09;
+    --crit-text: #e2635a;
+    --good-fill: #5bb273;
+    --on-good: #08170d;
+    --good-text: #5bb273;
 }

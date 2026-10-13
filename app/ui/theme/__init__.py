@@ -1,6 +1,7 @@
 """The look of the screen, as three plain CSS files.
 
-tokens.css      colours, radii, shadows (the only place for them)
+fonts.css       @font-face for IBM Plex, served from app/ui/static/fonts
+tokens.css      colours, radii, font stacks (the only place for them)
 streamlit.css   overrides of Streamlit's own widgets
 components.css  styles for the HTML built in app/ui/components
 
@@ -13,7 +14,7 @@ import streamlit as st
 
 _FOLDER = Path(__file__).parent
 # Order matters: tokens first, widget overrides next, component styles last.
-_FILES = ("tokens.css", "streamlit.css", "components.css")
+_FILES = ("fonts.css", "tokens.css", "streamlit.css", "components.css")
 
 
 def stylesheet() -> str:

@@ -459,6 +459,11 @@ The constraints are part of the design. Work with them.
 Found while reading the code against the docs, and from a screenshot of the
 live app. Real, small, and worth fixing before building on top.
 
+**Status after step 5 of `docs/UI_PLAN.md`:** D1 fixed (step 1). D2 and D3 fixed (step 5:
+no side bar, new palette, Plex, flat panel, chips, badge, totals strip, wordmark). D7 settled
+(step 3: a typed, unsaved value does survive switching papers). D8 partly done (the form is
+wider, 5:6; a live look at a real dossier is still owed). D4, D5, D6 are open.
+
 | # | Finding | Where | Consequence |
 |---|---|---|---|
 | D1 | **PDF text goes into HTML unescaped.** The summary card's `Issued by {who}` interpolates `supplier_name` (read from the PDF) into a string rendered with `unsafe_allow_html=True`. The filename is escaped; the issuer is not. | `app/ui/main.py` summary cards, `issued_by()` | Violates principle 8 and `AGENTS.md`'s untrusted-documents rule. A crafted issuer name renders as markup. **Fix first.** |

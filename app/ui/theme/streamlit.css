@@ -1,30 +1,46 @@
 /* Overrides of Streamlit's own widgets, selected by data-testid. Pinned to
-   streamlit==1.49.1: a version bump needs a visual check (docs/design.md section 9). */
+   streamlit==1.49.1: a version bump needs a visual check (docs/design.md section 9).
+   Every widget we show gets its ground, ink, border and radius from our tokens; a widget
+   we have not restyled is a bug to find, not a default to accept. */
 
 header, [data-testid="stHeader"], [data-testid="stToolbar"],
 [data-testid="stDecoration"], #MainMenu, footer { display: none !important; }
 [data-testid="stHeaderActionElements"], [data-testid="stHeadingWithActionElements"] a { display: none !important; }
 
-/* Base: color, ground, and type family. */
+/* Base: ground, ink, and the type family. Streamlit sets its own font on its text
+   elements, so the family has to be forced onto them. Its icon font is left alone. */
 .stApp {
     background: var(--bg);
     color: var(--ink);
-    font-family: "Inter", -apple-system, "Segoe UI", sans-serif;
+}
+.stApp, .stApp *:not([data-testid="stIconMaterial"]):not(code):not(pre) {
+    font-family: var(--font-sans) !important;
 }
 .stApp, .stApp input, .stApp textarea {
     font-variant-numeric: tabular-nums;
 }
-[data-testid="stWidgetLabel"] p { color: var(--ink) !important; }
 .block-container { padding: 1.25rem clamp(20px, 2.2vw, 48px) 3rem; max-width: none; }
 
-/* Equal-width tabs across the full row. The active underline is
-   [data-baseweb="tab-highlight"]; live check showed it tracks the
-   active tab with this flex rule, so it needs no extra offset. */
-[data-baseweb="tab-list"] { width: 100%; }
-[data-baseweb="tab"] { flex: 1 1 0; min-width: 0; color: var(--ink-secondary) !important; }
-[data-baseweb="tab"] p { color: inherit !important; }
+[data-testid="stMarkdownContainer"] p { font-size: 15px; line-height: 22px; }
+[data-testid="stCaptionContainer"] { color: var(--ink-secondary) !important; }
+[data-testid="stCaptionContainer"] p { font-size: 13px; line-height: 18px; }
+[data-testid="stWidgetLabel"] p {
+    color: var(--ink) !important; font-size: 14px; line-height: 20px; font-weight: 500;
+}
+[data-testid="stHeading"] h2 { font-size: 26px; line-height: 32px; font-weight: 600; letter-spacing: -0.01em; }
+[data-testid="stHeading"] h3 { font-size: 20px; line-height: 28px; font-weight: 600; }
+
+/* Tabs, equal width across the row. The selected one gets a 2px accent underline. */
+[data-baseweb="tab-list"] { width: 100%; gap: 0; }
+[data-baseweb="tab"] {
+    flex: 1 1 0; min-width: 0; background: transparent !important; color: var(--ink-secondary) !important;
+}
+[data-baseweb="tab"]:hover { color: var(--ink) !important; }
+[data-baseweb="tab"] p { color: inherit !important; font-size: 14px; line-height: 20px; font-weight: 500; }
 [data-baseweb="tab"][aria-selected="true"] { color: var(--accent-text) !important; }
-[data-baseweb="tab-highlight"] { background-color: var(--accent) !important; }
+[data-baseweb="tab"][aria-selected="true"] p { font-weight: 600; }
+[data-baseweb="tab-highlight"] { background-color: var(--accent) !important; height: 2px !important; }
+[data-baseweb="tab-border"] { background-color: var(--rule) !important; }
 
 /* The preview column sticks while the field column scrolls. Sticky on an
    inner div does not: Streamlit wraps that div in a short element box.
@@ -39,71 +55,84 @@ header, [data-testid="stHeader"], [data-testid="stToolbar"],
     height: fit-content;
     z-index: 2;
 }
-button { white-space: nowrap !important; }
-div[data-testid="stCaptionContainer"] { color: var(--ink-secondary) !important; }
+[data-testid="stImage"] img { border: 1px solid var(--rule); border-radius: var(--radius-lg); }
 
-/* Buttons — full ownership of the three variants. Streamlit's API only
-   exposes primary/secondary as button types; "ghost" from the design
-   doc is merged into secondary here rather than hacked in per-button. */
+/* Buttons: two variants, flat. Streamlit only offers primary and secondary. */
+button { white-space: nowrap !important; }
 .stApp [data-testid="stBaseButton-primary"],
 .stApp [data-testid="stBaseButton-primaryFormSubmit"] {
     background: var(--accent) !important;
-    color: #ffffff !important;
-    border: none !important;
+    color: var(--on-accent) !important;
+    border: 1px solid var(--accent) !important;
     border-radius: var(--radius-md) !important;
     padding: 10px 18px !important;
     font-size: 15px !important;
     font-weight: 600 !important;
-    box-shadow: var(--shadow-sm) !important;
+    box-shadow: none !important;
 }
 .stApp [data-testid="stBaseButton-primary"] *,
-.stApp [data-testid="stBaseButton-primaryFormSubmit"] * { color: #ffffff !important; }
+.stApp [data-testid="stBaseButton-primaryFormSubmit"] * { color: var(--on-accent) !important; }
 .stApp [data-testid="stBaseButton-primary"]:hover,
-.stApp [data-testid="stBaseButton-primaryFormSubmit"]:hover { background: var(--accent-hover) !important; }
+.stApp [data-testid="stBaseButton-primary"]:active,
+.stApp [data-testid="stBaseButton-primaryFormSubmit"]:hover,
+.stApp [data-testid="stBaseButton-primaryFormSubmit"]:active {
+    background: var(--accent-hover) !important;
+    border-color: var(--accent-hover) !important;
+}
 
 .stApp [data-testid="stBaseButton-secondary"] {
     background: var(--surface) !important;
     color: var(--ink) !important;
-    border: 1px solid var(--border) !important;
+    border: 1px solid var(--edge) !important;
     border-radius: var(--radius-md) !important;
     padding: 10px 18px !important;
     font-size: 15px !important;
     font-weight: 600 !important;
-    box-shadow: var(--shadow-sm) !important;
+    box-shadow: none !important;
 }
 .stApp [data-testid="stBaseButton-secondary"] * { color: var(--ink) !important; }
-.stApp [data-testid="stBaseButton-secondary"]:hover {
-    border-color: var(--accent) !important;
+.stApp [data-testid="stBaseButton-secondary"]:hover,
+.stApp [data-testid="stBaseButton-secondary"]:active {
+    border-color: var(--accent-text) !important;
     color: var(--accent-text) !important;
 }
-.stApp [data-testid="stBaseButton-secondary"]:hover * { color: var(--accent-text) !important; }
+.stApp [data-testid="stBaseButton-secondary"]:hover *,
+.stApp [data-testid="stBaseButton-secondary"]:active * { color: var(--accent-text) !important; }
+.stApp button:focus { box-shadow: none !important; }
+.stApp button:focus-visible { outline: 2px solid var(--accent-text) !important; outline-offset: 2px !important; }
 .stApp button:disabled { opacity: .5 !important; }
 
-/* The dropzone does not follow data-theme on its own, so give it our
-   surface and ink. Light text on that box was invisible in both themes. */
+/* The drop zone does not follow data-theme on its own, so give it our surface and ink. */
 .stApp [data-testid="stFileUploaderDropzone"] {
     background: var(--surface) !important;
-    border: 1px solid var(--border) !important;
+    border: 1px solid var(--edge) !important;
+    border-radius: var(--radius-lg) !important;
     color: var(--ink) !important;
 }
-.stApp [data-testid="stFileUploaderDropzone"] span { color: var(--ink-secondary) !important; }
-.stApp [data-testid="stFileUploaderDropzone"] [data-testid="stBaseButton-secondary"] {
-    background: transparent !important;
-    border: 1px solid var(--border) !important;
-    color: var(--ink) !important;
-}
-.stApp [data-testid="stFileUploaderDropzone"] [data-testid="stBaseButton-secondary"] * { color: var(--ink) !important; }
+.stApp [data-testid="stFileUploaderDropzone"] span,
+.stApp [data-testid="stFileUploaderDropzone"] small { color: var(--ink-secondary) !important; }
+.stApp [data-testid="stFileUploaderDropzone"] [data-testid="stBaseButton-secondary"] { background: transparent !important; }
 
-/* Text inputs */
-.stApp [data-testid="stTextInputRootElement"] {
+/* Text inputs: 1px edge, small radius, solid focus ring. Streamlit nests several wrappers that
+   each carry their own fill, border and radius; all of them are made to follow ours. */
+.stApp [data-testid="stTextInputRootElement"],
+.stApp [data-testid="stSelectbox"] [data-baseweb="select"] > div {
     background: var(--surface) !important;
-    border: 1px solid var(--border) !important;
+    border: 1px solid var(--edge) !important;
     border-radius: var(--radius-sm) !important;
     box-shadow: none !important;
 }
-.stApp [data-testid="stTextInputRootElement"]:focus-within {
-    border-color: var(--accent) !important;
-    box-shadow: 0 0 0 3px rgba(79,70,229,.35) !important;
+.stApp [data-testid="stTextInputRootElement"] > div,
+.stApp [data-testid="stTextInputRootElement"] [data-baseweb="input"],
+.stApp [data-testid="stTextInputRootElement"] [data-baseweb="base-input"] {
+    background: transparent !important;
+    border-radius: var(--radius-sm) !important;
+}
+.stApp [data-testid="stTextInputRootElement"]:focus-within,
+.stApp [data-testid="stSelectbox"] [data-baseweb="select"] > div:focus-within {
+    border-color: var(--accent-text) !important;
+    outline: 2px solid var(--accent-text);
+    outline-offset: 1px;
 }
 .stApp [data-testid="stTextInput"] input {
     color: var(--ink) !important;
@@ -111,37 +140,42 @@ div[data-testid="stCaptionContainer"] { color: var(--ink-secondary) !important; 
     font-size: 15px !important;
     font-weight: 500 !important;
 }
-.stApp [data-testid="stTextInput"] input::placeholder { color: var(--ink-muted) !important; }
-/* An unnamed wrapper div inside the root still carries Streamlit's own
-   dark fill — make it transparent so the root's background (above)
-   actually shows instead of being hidden under it. */
-.stApp [data-testid="stTextInputRootElement"] > div { background: transparent !important; }
+.stApp [data-testid="stTextInput"] input::placeholder { color: var(--ink-secondary) !important; }
+.stApp [data-testid="stSelectbox"] [data-baseweb="select"] * { color: var(--ink) !important; }
 
-/* Checkbox box (resting state only — the checked-mark keeps Streamlit's
-   own rendering, this is a single lightly-used control). */
+/* Checkbox box (resting state only; the checked mark keeps Streamlit's own rendering). */
 .stApp [data-testid="stCheckbox"] span:first-of-type {
     background: var(--surface) !important;
-    border: 1px solid var(--border) !important;
+    border: 1px solid var(--edge) !important;
+    border-radius: var(--radius-sm) !important;
 }
 
-[data-testid="stHeading"] h2 { font-size: 26px; line-height: 32px; font-weight: 700; letter-spacing: -0.01em; }
-[data-testid="stHeading"] h3 { font-size: 20px; line-height: 28px; font-weight: 600; }
+/* The reading screen's status block. */
+.stApp details {
+    background: var(--surface) !important;
+    border: 1px solid var(--rule) !important;
+    border-radius: var(--radius-lg) !important;
+}
 
+/* The strip under the header that holds the two values typed once per file. */
 .topbar-strip-marker { display: none; }
 [data-testid="stElementContainer"]:has(.topbar-strip-marker) + [data-testid="stElementContainer"] {
     background: var(--surface-sunken);
-    border-top: 1px solid var(--border);
-    padding: 9px 0;
-}
-[data-testid="stElementContainer"]:has(.topbar-strip-marker) + [data-testid="stElementContainer"] [data-testid="stHorizontalBlock"] {
-    align-items: flex-end;
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+    padding: 10px 16px;
 }
 
-/* The two-group form panel — own surface, lifted above the page */
+/* The form panel: paper on the desk, a hairline and nothing else. */
 .stApp [data-testid="stForm"] {
     background: var(--surface) !important;
-    border: 1px solid var(--border) !important;
+    border: 1px solid var(--rule) !important;
     border-radius: var(--radius-lg) !important;
-    box-shadow: var(--shadow-md) !important;
+    box-shadow: none !important;
     padding: 24px !important;
+}
+/* A field row (three columns with an input in it) is separated from the next by a rule. */
+.stApp [data-testid="stForm"] [data-testid="stHorizontalBlock"]:has(> [data-testid="stColumn"]:nth-child(3)):has([data-testid="stTextInputRootElement"]) {
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 12px;
 }

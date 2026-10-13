@@ -1,14 +1,20 @@
-from app.ui.components.chip import tag
+from collections.abc import Sequence
+
+from app.ui.components.chip import chip
 from app.ui.components.text import esc
 
 
-def summary_card(label: str, amount: str, sub: str, needs_check: bool) -> str:
-    """One headline figure. Every argument is plain text and is escaped here."""
-    chip = tag("warn") if needs_check else ""
-    return (
-        f'<div class="card">'
-        f'<div class="card-label">{esc(label)}</div>'
-        f'<div class="card-amount">{esc(amount)}</div>'
-        f'<div class="card-sub">{esc(sub)}</div>{chip}'
-        f"</div>"
-    )
+def totals_strip(cells: Sequence) -> str:
+    """One ruled row of headline figures. Each cell has `label`, `amount`, `sub` and
+    `needs_check`; all text is plain and is escaped here."""
+    parts = []
+    for cell in cells:
+        parts.append(
+            '<div class="totals-cell">'
+            f'<div class="totals-label">{esc(cell.label)}</div>'
+            f'<div class="totals-figure">{esc(cell.amount)}</div>'
+            f'<div class="totals-sub">{esc(cell.sub)}</div>'
+            f'{chip("warn") if cell.needs_check else ""}'
+            "</div>"
+        )
+    return f'<div class="totals">{"".join(parts)}</div>'
