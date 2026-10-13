@@ -434,3 +434,36 @@ valid PDF opens a review screen; a non-PDF shows the banner and a Back button).
 slightly tinted header from Streamlit; the drop zone, checkbox when ticked, and select menu
 popup need a look in both themes; the export area still swaps its buttons for the override
 box (D6, deferred); Streamlit's own element spacing around the banner row.
+
+## 19. Step 6 results (done): the visual pass
+
+A gallery of 12 states was captured in light and dark with the seeded dossiers (empty start,
+file chosen, "choose a PDF first" warning, reading error, blocked dossier, focused input,
+hovered button, shipping tab with checks shown, open select menu, customs tab, clean dossier,
+override ticked) and read side by side.
+
+**Fixed**
+
+- The reading screen's status block kept a pale blue header from Streamlit; it now follows
+  the paper surface in both themes.
+- After "download anyway", the two download buttons sat far apart (each in a wide, mostly
+  empty column); they now fill their columns and sit side by side.
+
+**Checked and already right in both themes**: the drop zone and the chosen-file row, the
+"Limit 30MB" text, the unticked override box, the banner and its badge, chips, the totals
+strip, tabs (selected underline, hover), page buttons (enabled and disabled), inputs, the
+select and its menu (the menu follows the operating system theme), error and warning banners.
+
+**Keyboard.** Tabbing through the clean-dossier screen gives 23 interactive stops in each
+theme; every one shows a solid 2 px ring in `accent-text`. The only stop without a ring is
+Streamlit's scrollable page container, which is not a control. `test_design_rules.py` now
+fails if a focus ring is removed (`outline: none` or `0`).
+
+Tests: 119 to 120.
+
+**New finding D9** (in `docs/design.md` section 10): the header chip is decided by validation
+results only, so a dossier with flagged fields but passing checks says "Ready to download"
+while rows and totals say "Needs a check". `design.md` section 4 says a flagged field makes
+the dossier `warn`. This is a behaviour change, so it is left for a decision.
+
+**Not touched, by plan**: D6, the export area still swaps its buttons for the override box.

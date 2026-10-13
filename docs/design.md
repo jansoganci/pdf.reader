@@ -473,6 +473,7 @@ wider, 5:6; a live look at a real dossier is still owed). D4, D5, D6 are open.
 | D5 | **`UI_REVIEW.md` still describes a left paper rail.** The app now uses tabs. | `docs/UI_REVIEW.md` §5 | The "keep the rail" decision was reversed without being recorded. |
 | D6 | **Export area changes shape with state.** Download buttons are swapped for a checkbox when errors block. | `main.py` export block | Breaks principle 6. Keep the buttons, disable them, put the override beside them. |
 | D7 | **Tab-switch persistence is a stated check (`UI_REVIEW.md` §8) with no test.** | `main.py` | Risk of silently losing typed values. |
+| D9 | **The dossier chip ignores fields that need a check.** `dossier_tier` looks only at validation results, so a dossier whose fields are flagged `review` but whose checks pass shows `Ready to download` next to `Needs a check` chips. Section 4 says a field in `review` makes the tier `warn`. Changing it is a behaviour change, so it waits for a decision. | `app/ui/view.py` `dossier_tier` | The header can say "ready" while a row says "check". |
 | D8 | **Not checked live beyond one screenshot.** Spacing in the 2:1 preview/fields split (three sub-columns inside the narrow pane) is unverified on a real dossier. | — | Do a visual pass on a real dossier before changing proportions. |
 
 ---

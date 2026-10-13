@@ -10,5 +10,5 @@ def export_override() -> bool:
 
 def export_buttons(csv: bytes, json: bytes) -> None:
     columns = st.columns([1, 1, 4])
-    columns[0].download_button("Download CSV", csv, file_name="fields.csv")
-    columns[1].download_button("Download JSON", json, file_name="import-file.json", type="primary")
+    columns[0].download_button("Download CSV", csv, file_name="fields.csv", width="stretch")
+    columns[1].download_button("Download JSON", json, file_name="import-file.json", type="primary", width="stretch")

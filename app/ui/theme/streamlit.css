@@ -156,6 +156,7 @@ button { white-space: nowrap !important; }
     border: 1px solid var(--rule) !important;
     border-radius: var(--radius-lg) !important;
 }
+.stApp details summary, .stApp details summary:hover { background: transparent !important; color: var(--ink) !important; }
 
 /* The strip under the header that holds the two values typed once per file. */
 .topbar-strip-marker { display: none; }

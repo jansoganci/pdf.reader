@@ -81,6 +81,12 @@ def test_no_emoji_in_the_screen_code():
         assert not emoji.search(path.read_text()), path.name
 
 
+def test_focus_is_a_solid_ring_and_is_never_removed():
+    assert not re.search(r"outline\s*:\s*(none|0)\b", ALL_CSS)
+    assert re.search(r"button:focus-visible\s*\{[^}]*outline:\s*2px solid var\(--accent-text\)", ALL_CSS)
+    assert re.search(r"stTextInputRootElement\"\]:focus-within[^{]*\{[^}]*outline:\s*2px solid var\(--accent-text\)", ALL_CSS)
+
+
 # -- section 9: the fonts and the upload limit ---------------------------------------
 
 def test_every_font_file_the_css_names_is_in_the_repo():
