@@ -1,0 +1,147 @@
+/* Overrides of Streamlit's own widgets, selected by data-testid. Pinned to
+   streamlit==1.49.1: a version bump needs a visual check (docs/design.md section 9). */
+
+header, [data-testid="stHeader"], [data-testid="stToolbar"],
+[data-testid="stDecoration"], #MainMenu, footer { display: none !important; }
+[data-testid="stHeaderActionElements"], [data-testid="stHeadingWithActionElements"] a { display: none !important; }
+
+/* Base: color, ground, and type family. */
+.stApp {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Inter", -apple-system, "Segoe UI", sans-serif;
+}
+.stApp, .stApp input, .stApp textarea {
+    font-variant-numeric: tabular-nums;
+}
+[data-testid="stWidgetLabel"] p { color: var(--ink) !important; }
+.block-container { padding: 1.25rem clamp(20px, 2.2vw, 48px) 3rem; max-width: none; }
+
+/* Equal-width tabs across the full row. The active underline is
+   [data-baseweb="tab-highlight"]; live check showed it tracks the
+   active tab with this flex rule, so it needs no extra offset. */
+[data-baseweb="tab-list"] { width: 100%; }
+[data-baseweb="tab"] { flex: 1 1 0; min-width: 0; color: var(--ink-secondary) !important; }
+[data-baseweb="tab"] p { color: inherit !important; }
+[data-baseweb="tab"][aria-selected="true"] { color: var(--accent-text) !important; }
+[data-baseweb="tab-highlight"] { background-color: var(--accent) !important; }
+
+/* The preview column sticks while the field column scrolls. Sticky on an
+   inner div does not: Streamlit wraps that div in a short element box.
+   The column itself is the box that has room to stick. top is small
+   because this screen's header scrolls away (the Streamlit header is
+   hidden). */
+.sticky-preview { display: none; }
+[data-testid="stColumn"]:has(.sticky-preview) {
+    position: sticky;
+    top: 16px;
+    align-self: flex-start;
+    height: fit-content;
+    z-index: 2;
+}
+button { white-space: nowrap !important; }
+div[data-testid="stCaptionContainer"] { color: var(--ink-secondary) !important; }
+
+/* Buttons — full ownership of the three variants. Streamlit's API only
+   exposes primary/secondary as button types; "ghost" from the design
+   doc is merged into secondary here rather than hacked in per-button. */
+.stApp [data-testid="stBaseButton-primary"],
+.stApp [data-testid="stBaseButton-primaryFormSubmit"] {
+    background: var(--accent) !important;
+    color: #ffffff !important;
+    border: none !important;
+    border-radius: var(--radius-md) !important;
+    padding: 10px 18px !important;
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    box-shadow: var(--shadow-sm) !important;
+}
+.stApp [data-testid="stBaseButton-primary"] *,
+.stApp [data-testid="stBaseButton-primaryFormSubmit"] * { color: #ffffff !important; }
+.stApp [data-testid="stBaseButton-primary"]:hover,
+.stApp [data-testid="stBaseButton-primaryFormSubmit"]:hover { background: var(--accent-hover) !important; }
+
+.stApp [data-testid="stBaseButton-secondary"] {
+    background: var(--surface) !important;
+    color: var(--ink) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--radius-md) !important;
+    padding: 10px 18px !important;
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    box-shadow: var(--shadow-sm) !important;
+}
+.stApp [data-testid="stBaseButton-secondary"] * { color: var(--ink) !important; }
+.stApp [data-testid="stBaseButton-secondary"]:hover {
+    border-color: var(--accent) !important;
+    color: var(--accent-text) !important;
+}
+.stApp [data-testid="stBaseButton-secondary"]:hover * { color: var(--accent-text) !important; }
+.stApp button:disabled { opacity: .5 !important; }
+
+/* The dropzone does not follow data-theme on its own, so give it our
+   surface and ink. Light text on that box was invisible in both themes. */
+.stApp [data-testid="stFileUploaderDropzone"] {
+    background: var(--surface) !important;
+    border: 1px solid var(--border) !important;
+    color: var(--ink) !important;
+}
+.stApp [data-testid="stFileUploaderDropzone"] span { color: var(--ink-secondary) !important; }
+.stApp [data-testid="stFileUploaderDropzone"] [data-testid="stBaseButton-secondary"] {
+    background: transparent !important;
+    border: 1px solid var(--border) !important;
+    color: var(--ink) !important;
+}
+.stApp [data-testid="stFileUploaderDropzone"] [data-testid="stBaseButton-secondary"] * { color: var(--ink) !important; }
+
+/* Text inputs */
+.stApp [data-testid="stTextInputRootElement"] {
+    background: var(--surface) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--radius-sm) !important;
+    box-shadow: none !important;
+}
+.stApp [data-testid="stTextInputRootElement"]:focus-within {
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 0 3px rgba(79,70,229,.35) !important;
+}
+.stApp [data-testid="stTextInput"] input {
+    color: var(--ink) !important;
+    padding: 10px 12px !important;
+    font-size: 15px !important;
+    font-weight: 500 !important;
+}
+.stApp [data-testid="stTextInput"] input::placeholder { color: var(--ink-muted) !important; }
+/* An unnamed wrapper div inside the root still carries Streamlit's own
+   dark fill — make it transparent so the root's background (above)
+   actually shows instead of being hidden under it. */
+.stApp [data-testid="stTextInputRootElement"] > div { background: transparent !important; }
+
+/* Checkbox box (resting state only — the checked-mark keeps Streamlit's
+   own rendering, this is a single lightly-used control). */
+.stApp [data-testid="stCheckbox"] span:first-of-type {
+    background: var(--surface) !important;
+    border: 1px solid var(--border) !important;
+}
+
+[data-testid="stHeading"] h2 { font-size: 26px; line-height: 32px; font-weight: 700; letter-spacing: -0.01em; }
+[data-testid="stHeading"] h3 { font-size: 20px; line-height: 28px; font-weight: 600; }
+
+.topbar-strip-marker { display: none; }
+[data-testid="stElementContainer"]:has(.topbar-strip-marker) + [data-testid="stElementContainer"] {
+    background: var(--surface-sunken);
+    border-top: 1px solid var(--border);
+    padding: 9px 0;
+}
+[data-testid="stElementContainer"]:has(.topbar-strip-marker) + [data-testid="stElementContainer"] [data-testid="stHorizontalBlock"] {
+    align-items: flex-end;
+}
+
+/* The two-group form panel — own surface, lifted above the page */
+.stApp [data-testid="stForm"] {
+    background: var(--surface) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--radius-lg) !important;
+    box-shadow: var(--shadow-md) !important;
+    padding: 24px !important;
+}

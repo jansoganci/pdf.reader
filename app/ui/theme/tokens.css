@@ -1,0 +1,68 @@
+/* Tokens: the only place for colours, radii and shadows. Dark values are repeated
+   under the OS media query and under [data-theme]. See docs/design.md section 5. */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* Design tokens — see docs/DESIGN_SYSTEM.md. Light values on :root; dark
+   values repeated under both the OS media query and a [data-theme]
+   attribute, so a manual theme toggle can be wired in later without
+   touching a single color value anywhere else. */
+:root {
+    --bg: #fafafa;
+    --surface: #ffffff;
+    --surface-sunken: #f4f4f5;
+    --border: #e4e4e7;
+
+    --ink: #18181b;
+    --ink-secondary: #52525b;
+    --ink-muted: #a1a1aa;
+
+    --accent: #4f46e5;
+    --accent-hover: #4338ca;
+    --accent-text: #4f46e5;
+    --accent-soft: #eef2ff;
+
+    --good-text: #166534; --good-bg: #dcfce7; --good-strong: #16a34a;
+    --warn-text: #92400e; --warn-bg: #fef3c7; --warn-strong: #f59e0b;
+    --crit-text: #991b1b; --crit-bg: #fee2e2; --crit-strong: #dc2626;
+
+    --radius-sm: 10px;
+    --radius-md: 14px;
+    --radius-lg: 20px;
+    --shadow-sm: 0 1px 3px rgba(16,24,40,.08), 0 1px 2px rgba(16,24,40,.04);
+    --shadow-md: 0 4px 12px rgba(16,24,40,.08), 0 2px 4px rgba(16,24,40,.04);
+}
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+        --bg: #0f0f12;
+        --surface: #18181b;
+        --surface-sunken: #0f0f12;
+        --border: #2a2a2e;
+        --ink: #f4f4f5;
+        --ink-secondary: #a1a1aa;
+        --ink-muted: #71717a;
+        --accent-text: #a5b4fc;
+        --accent-soft: #1e1b4b;
+        --good-text: #4ade80; --good-bg: #14281d; --good-strong: #22c55e;
+        --warn-text: #fbbf24; --warn-bg: #2b2111; --warn-strong: #f59e0b;
+        --crit-text: #f87171; --crit-bg: #2c1515; --crit-strong: #ef4444;
+        --shadow-sm: none;
+        --shadow-md: none;
+    }
+}
+:root[data-theme="dark"] {
+    --bg: #0f0f12;
+    --surface: #18181b;
+    --surface-sunken: #0f0f12;
+    --border: #2a2a2e;
+    --ink: #f4f4f5;
+    --ink-secondary: #a1a1aa;
+    --ink-muted: #71717a;
+    --accent-text: #a5b4fc;
+    --accent-soft: #1e1b4b;
+    --good-text: #4ade80; --good-bg: #14281d; --good-strong: #22c55e;
+    --warn-text: #fbbf24; --warn-bg: #2b2111; --warn-strong: #f59e0b;
+    --crit-text: #f87171; --crit-bg: #2c1515; --crit-strong: #ef4444;
+    --shadow-sm: none;
+    --shadow-md: none;
+}

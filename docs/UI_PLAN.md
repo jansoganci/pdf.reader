@@ -303,3 +303,30 @@ broker invoices ("1.") no longer hang as a list marker. Layout is unchanged.
 |---|---|---|
 | F8 | Streamlit forces its own font (Source Sans) on its text, so the CSS `font-family` set on `.stApp` never reached it; the app has not been rendering Inter anywhere. | step 5: apply the family to Streamlit's text elements |
 | F9 | Streamlit gives every markdown block a -16px bottom margin that a `<p>` cancels; any raw `<div>` block needs the margin written out. | already handled for `.pdf-caption` and `.pdf-body`; remember for new blocks |
+
+## 15. Step 2 results (done)
+
+The 259 lines of CSS that sat inside `main.py` are now three files in `app/ui/theme/`,
+moved without changing a rule:
+
+| File | Lines | Holds |
+|---|---|---|
+| `tokens.css` | 68 | colours, radii, shadows; light, dark by OS setting, dark by `[data-theme]` |
+| `streamlit.css` | 147 | overrides of Streamlit widgets (buttons, inputs, tabs, drop zone, form panel, header strip) |
+| `components.css` | 49 | banner, tag, status pill, brand mark, info glyph, group title, PDF text blocks, summary card |
+
+`theme.inject()` reads the files on every run (so a CSS edit shows after a page refresh)
+and writes one `<style>` element. `main.py` went from about 690 lines to 399.
+
+**How it was checked**
+
+- A script compared every non-blank CSS line before and after. It caught one line left
+  behind in the first split; fixed, and then nothing was lost and nothing was added.
+- Same seeded dossier and the Start screen, light and dark: **all four screenshots are
+  pixel-identical** to the step 1 / original ones.
+- Tests: 44 to 48. They check that the three files load in order, that both themes are
+  defined, that every `var(--x)` used is defined, and that no CSS or hex colour is left
+  in `app/ui/*.py` outside `theme/`.
+
+The old Google Fonts `@import` and the Inter family are still in `tokens.css` on purpose;
+they change with the skin in step 5.

@@ -10,7 +10,7 @@ import ast
 from pathlib import Path
 
 UI = Path(__file__).resolve().parents[2] / "app" / "ui"
-BUILDERS = {"banner", "summary_card", "wordmark", "plain", "group_title", "field_label", "page_label"}
+BUILDERS = {"banner", "summary_card", "wordmark", "plain", "group_title", "field_label", "page_label", "stylesheet"}
 
 
 def _unsafe_html_calls(tree: ast.AST):
