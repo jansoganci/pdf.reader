@@ -75,6 +75,8 @@ COPY_FIELDS = {
     "unknown": ["supplier_name", "document_number", "document_date", "total_amount"],
 }
 
+NOT_ON_THE_PAGE = "Not on the page"  # shown in place of printed text when a field was not read
+
 FILE_MANUAL = (
     ("order_number", "Order number"),
     ("sap_exchange_rate", "Exchange rate you enter"),

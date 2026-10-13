@@ -188,6 +188,63 @@ def view_line_without_fields():
     return LineRecord(fields={})
 
 
+# -- missing and edited values ---------------------------------------------------------
+
+def _row(screen, paper_id, key):
+    return next(row for row in _paper(screen, paper_id).rows if row.key == key)
+
+
+def test_a_field_that_was_not_read_is_marked_missing_and_stays_empty():
+    row = _row(view.build(maroc_dossier()), "licence", "hs_code")
+    assert row.missing is True
+    assert row.value_text == "" and row.printed_text is None  # nothing invented
+    assert row.edited is False and row.needs_check is False
+
+
+def test_a_field_that_was_read_is_not_missing():
+    screen = view.build(maroc_dossier())
+    assert _row(screen, "supplier", "total_amount").missing is False
+    assert _row(screen, "licence", "total_amount").missing is False
+
+
+def test_a_missing_field_is_not_missing_once_a_person_typed_a_value():
+    dossier = maroc_dossier()
+    licence = next(doc for doc in dossier.documents if doc.id == "licence")
+    licence.fields["hs_code"].user_value = "3004.90"
+    row = _row(view.build(dossier), "licence", "hs_code")
+    assert (row.missing, row.edited, row.value_text) == (False, True, "3004.90")
+
+
+def test_a_value_a_person_changed_is_marked_edited_and_the_original_stays_in_the_data():
+    dossier = maroc_dossier()
+    broker = dossier.documents[0]
+    broker.fields["total_amount"].user_value = "7000.00"
+    row = _row(view.build(dossier), "broker", "total_amount")
+    assert row.edited is True and row.value_text == "7,000.00 MAD"
+    assert broker.fields["total_amount"].value == "6830.00"  # the screen never touches the original
+
+
+def test_clearing_a_value_counts_as_an_edit_and_is_not_called_missing():
+    dossier = maroc_dossier()
+    dossier.documents[0].fields["tax_amount"].user_value = ""
+    row = _row(view.build(dossier), "broker", "tax_amount")
+    assert (row.edited, row.missing, row.value_text) == (True, False, "")
+
+
+def test_nothing_is_marked_edited_until_a_person_edits():
+    screen = view.build(maroc_dossier())
+    assert not any(row.edited for paper in screen.papers for row in paper.rows)
+
+
+def test_the_not_on_the_page_words_never_reach_an_export():
+    from app.export.writers import dossier_json, fields_csv
+    from app.ui.words import NOT_ON_THE_PAGE
+
+    dossier = maroc_dossier()
+    assert NOT_ON_THE_PAGE not in fields_csv(dossier)
+    assert NOT_ON_THE_PAGE not in dossier_json(dossier)
+
+
 # -- totals strip --------------------------------------------------------------------
 
 def test_totals_show_only_the_kinds_that_exist_and_say_when_a_figure_was_not_read():

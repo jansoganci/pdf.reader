@@ -219,6 +219,24 @@ def test_saving_a_correction_updates_the_dossier_and_keeps_the_original():
     assert at.text_input(key="value-liquidation-total_amount").value == "50,000.00 MAD"
 
 
+def test_a_field_that_was_not_read_says_so_and_stays_empty():
+    _seed("screen-g2")
+    at = _run(dossier_id="screen-g2")
+    assert at.text_input(key="value-licence-hs_code").value == ""  # no value invented
+    html = _text(at)
+    assert html.count("Not on the page") == 2  # hs_code and regime on the licence
+
+
+def test_nothing_says_edited_until_a_correction_is_saved_and_then_only_that_row_does():
+    _seed("screen-g3")
+    at = _run(dossier_id="screen-g3")
+    assert "Edited" not in _text(at)
+    at.text_input(key="value-liquidation-total_amount").set_value("50000.00")
+    _save_button(at, "liquidation").click().run()
+    assert _text(at).count('class="mark"') == 1
+    assert "Edited" in _text(at)
+
+
 def test_saving_without_a_change_makes_no_correction():
     _seed("screen-h")
     at = _run(dossier_id="screen-h")

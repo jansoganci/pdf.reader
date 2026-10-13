@@ -8,6 +8,7 @@ from app.ui.components import (
     badge,
     banner,
     chip,
+    edited_mark,
     esc,
     field_label,
     group_title,
@@ -97,6 +98,23 @@ def test_field_label_and_group_title_escape():
     _no_live_markup(group_title(HOSTILE))
     assert field_label("Issued by") == "Issued by"
     assert field_label("Total", needs_check=True) == 'Total <span class="chip warn">Needs a check</span>'
+
+
+def test_the_edited_mark_is_outlined_text_not_a_chip():
+    assert edited_mark() == '<span class="mark">Edited</span>'
+    assert "chip" not in edited_mark()
+
+
+def test_field_label_orders_the_chip_before_the_mark_and_escapes():
+    assert field_label("Total", needs_check=True, edited=True) == (
+        'Total <span class="chip warn">Needs a check</span> <span class="mark">Edited</span>'
+    )
+    assert field_label("Total", edited=True) == 'Total <span class="mark">Edited</span>'
+    _no_live_markup(field_label(HOSTILE, needs_check=True, edited=True))
+
+
+def test_plain_note_is_the_sans_block_for_what_the_app_says():
+    assert plain("Not on the page", "note") == '<div class="pdf-note">Not on the page</div>'
 
 
 def test_plain_is_an_escaped_html_block():

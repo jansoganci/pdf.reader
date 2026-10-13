@@ -4,7 +4,7 @@ import streamlit as st
 
 from app.ui import state, view
 from app.ui.components import field_label, group_title, plain
-from app.ui.words import LINE_MANUAL
+from app.ui.words import LINE_MANUAL, NOT_ON_THE_PAGE
 
 
 @dataclass(frozen=True)
@@ -31,14 +31,17 @@ def paper_form(paper: view.PaperView, manual: dict[str, str]) -> FormResult | No
         typed_values: dict[str, tuple[str, str]] = {}
         for row in paper.rows:
             label, value_col, printed = st.columns([1.3, 1.6, 1.5], vertical_alignment="center")
-            label.markdown(field_label(row.label, row.needs_check), unsafe_allow_html=True)
+            label.markdown(field_label(row.label, row.needs_check, row.edited), unsafe_allow_html=True)
             new_value = value_col.text_input(
                 row.label,
                 value=row.value_text,
                 key=state.value_key(paper.id, row.key),
                 label_visibility="collapsed",
             )
-            printed.markdown(plain(row.printed_text, "printed"), unsafe_allow_html=True)
+            if row.missing:
+                printed.markdown(plain(NOT_ON_THE_PAGE, "note"), unsafe_allow_html=True)
+            else:
+                printed.markdown(plain(row.printed_text, "printed"), unsafe_allow_html=True)
             typed_values[row.key] = (row.value_text, new_value)
 
         line_typed: dict[str, str] = {}

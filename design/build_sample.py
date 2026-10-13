@@ -89,6 +89,8 @@ def _row(row: view.RowView) -> str:
 
 def render() -> str:
     dossier = maroc_dossier("sample")
+    # One value shown as a person-corrected one, so the sample carries the Edited mark.
+    next(doc for doc in dossier.documents if doc.id == "liquidation").fields["tax_amount"].user_value = "42266.00"
     screen = view.build(dossier)
     paper = screen.papers[OPEN_TAB]
     page = paper.default_page

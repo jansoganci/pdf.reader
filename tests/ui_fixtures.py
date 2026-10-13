@@ -78,6 +78,7 @@ def maroc_dossier(dossier_id="maroc", supplier_name=SUPPLIER, maersk_last_line="
         paper("licence", "import_licence", [10], {
             "supplier_name": field(supplier_name, page=10, method="ai"), "document_number": field("L-2026-118", page=10),
             "currency": field("EUR", page=10), "total_amount": field("18921.09", page=10),
+            "hs_code": FieldValue(status="missing"), "regime": FieldValue(status="missing"),  # nothing was read
         }),
     ]
     dossier = Dossier(

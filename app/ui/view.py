@@ -57,6 +57,8 @@ class RowView:
     value_text: str
     printed_text: str | None
     needs_check: bool
+    missing: bool = False  # nothing was read and nobody typed anything: say so, never invent a value
+    edited: bool = False  # a person changed this value; the original is kept in the data
 
 
 @dataclass(frozen=True)
@@ -237,16 +239,23 @@ def totals(dossier: Dossier) -> tuple[TotalsCell, ...]:
 
 
 def _rows(document: DocumentRecord) -> tuple[RowView, ...]:
-    return tuple(
-        RowView(
-            key=key,
-            label=field_name(document.document_type, key),
-            value_text=display(document, key),
-            printed_text=document.fields[key].raw_text,
-            needs_check=document.fields[key].status == "review",
+    rows = []
+    for key in shown_keys(document):
+        field = document.fields[key]
+        value_text = display(document, key)
+        edited = field.user_value is not None
+        rows.append(
+            RowView(
+                key=key,
+                label=field_name(document.document_type, key),
+                value_text=value_text,
+                printed_text=field.raw_text,
+                needs_check=field.status == "review",
+                missing=field.status == "missing" and not value_text and not edited,
+                edited=edited,
+            )
         )
-        for key in shown_keys(document)
-    )
+    return tuple(rows)
 
 
 def _lines(document: DocumentRecord) -> tuple[LineView, ...]:

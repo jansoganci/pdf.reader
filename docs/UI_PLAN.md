@@ -1,7 +1,7 @@
 # UI plan — new skin, clean structure
 
-> **Status: done (steps 0 to 7, plus D6).** Sections 0 to 12 are the plan as agreed; sections 13 to 21
-> record what each step did and how it was checked.
+> **Status: done (steps 0 to 7, plus D6 and the missing / edited markers).** Sections 0 to 12 are the
+> plan as agreed; sections 13 to 22 record what each step did and how it was checked.
 
 Draft for review. Nothing here is built yet. The look is fixed by `docs/design.md`;
 this file decides **how the code is organised and in what order it is built**.
@@ -528,3 +528,28 @@ before and after a tick; only `disabled` and `checked` change.
 Tests: 127 to 135 (disabled and enabled buttons in each state, tick, untick, a saved override
 reopened ticked, one dossier's tick not affecting another, the key pinned, the checkbox CSS).
 The scripted tour, the injection probe and real uploads give the same results as before.
+
+## 22. After the plan: "Not on the page" and "Edited" (done)
+
+Two small additions from `docs/design.md` section 11, decisions 3 and 4, both UI only.
+
+- **Not on the page.** A field the reader found nothing for (status `missing`, no value, nothing
+  typed) used to be a blank box beside a blank printed-text cell, which looks the same as "nobody
+  looked". The printed-text cell now says `Not on the page` in a quiet sans caption, clearly not
+  the mono face used for paper text. The value box stays blank; nothing is invented. Once a person
+  types a value the row is no longer called missing.
+- **Edited.** A value whose `user_value` is set shows a small **outlined** `Edited` label after the
+  row label (after the `Needs a check` chip if there is one). It is outlined, not filled, because
+  it is information and not a status tier. It appears after Save: a Streamlit form keeps unsaved
+  typing in the browser, so the server cannot know about it before then. Clearing a value counts
+  as an edit and is not called missing.
+
+Where: `RowView.missing` and `RowView.edited` in `view.py`; `edited_mark` and the `note` kind of
+`plain` in `components/`; `NOT_ON_THE_PAGE` in `words.py`; `.mark` and `.pdf-note` in
+`components.css`; the row in `widgets/paper_form.py`. The exports are untouched.
+
+Checks: tests 135 to 147 (the flags in each case, a test that the new words never appear in the
+JSON or the CSV, the markup, the AppTest screens), `design/sample.html` regenerated (it now carries
+one Edited row). In the browser the licence tab shows two `Not on the page` rows in both themes,
+and a saved correction shows `Edited` after the label. The scripted tour and the injection probe
+give the same results as before.

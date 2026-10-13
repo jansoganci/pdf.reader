@@ -156,7 +156,8 @@ to one tier, one word, one mark.
 | **review** | Worth a second look, does not block | `Needs a check` | highlighter chip / exclamation badge | field `review`; validation `severity: warning`; boundary `review` |
 | **crit** | Blocks the download | `Blocks download` | red chip / cross badge | validation `severity: error`, `status: failed` |
 | *(none)* | Read and consistent | — | no decoration | field `high` |
-| *(none, see §11)* | Not on the page | — | blank value | field `missing` |
+| *(none)* | Not on the page | `Not on the page` | a quiet sans caption where the printed text would be; the value box stays blank | field `missing`, no value read, nothing typed |
+| *(information, not a status)* | A person changed the value | `Edited` | a small **outlined** label after the row label (chips are filled; this is not a tier) | `user_value` is present |
 
 The tier is called **review** in the visual layer (the highlighter), because
 that is what it means. Code that still says `warn` maps to it one to one.
@@ -369,7 +370,7 @@ selector the CSS owns. The class names below are the targets for `main.py`.
 | **Banner** | `surface`, 1px `rule`, 6px radius · 20px square badge + one ink sentence | good / review / crit (badge only differs) | One sentence, count + consequence. **No side bar, no tint.** Never two banners for the same fact. |
 | **Status chip** | filled `*-fill`, `on-*` word, 3px radius, 12/600 | review / crit / good | Goes after the label it qualifies, or in the header for the dossier. Always the word. No dot. |
 | **Totals strip** | one row, up to four cells divided by 1px `rule`; label · figure · sub-line · optional chip | normal / needs check | Figures only, no boxes, no shadow. One cell per kind; the tabs remain the full inventory. |
-| **Field row** | label (+chip) · value input · printed text in mono | normal / review / edited-unsaved | Printed text is read-only, mono, never reformatted. The value input starts pre-filled with the current value. |
+| **Field row** | label (+chip) (+`Edited` mark) · value input · printed text in mono, or `Not on the page` | normal / review / edited / missing | Printed text is read-only, mono, never reformatted. The value input starts pre-filled with the current value. `Not on the page` is sans and never a value. `Edited` shows only after Save (a form holds unsaved typing on the page, so the server cannot see it yet). |
 | **Group title** | 13/600 sentence case over a 1px `rule` | — | Exactly two per panel. |
 | **Form panel** | `surface`, 1px `rule`, 6px radius, 24px pad | — | One submit. Flat. |
 | **Button – primary** | `accent` fill, `on-accent` label, 4px radius | rest / hover / disabled | One primary per region: `Read this PDF`, `Save`, `Download JSON`. |
@@ -502,13 +503,12 @@ Each needs an answer from the business or the owner. None blocks the work in §1
    repeated action. Against: the code, docs, and prompts are English. Needs the
    two accountants.
 2. ~~Self-host the fonts, or keep Google Fonts?~~ **Decided: in the repo** (step 1).
-3. **How should `missing` look?** Today a missing field is a blank input —
-   honest, but a blank can also mean "forgot to look". Option: a quiet
-   `Not on the page` caption in the *Printed text* column. It must never become
-   a value and must never be exported.
-4. **Should user-edited values be marked?** The data keeps `method: user` and
-   the original. The screen doesn't show it. Option: a small `Edited` marker in
-   the row so the clerk sees what they changed before Save/export.
+3. ~~How should `missing` look?~~ **Decided and built:** a quiet `Not on the page` caption in
+   the *Printed text* column. It is UI only: the value stays blank, and the words never reach
+   the JSON or CSV (a test checks).
+4. ~~Should user-edited values be marked?~~ **Decided and built:** a small outlined `Edited`
+   label after the row label, shown once the correction is saved. The original value stays in
+   the data and the exports, as before.
 5. **Per-service-line tax and reason codes** on broker invoices are already in
    the UI; whether Phase 1 keeps them document-level is still an open business
    question (`UI_REVIEW.md` §9).
@@ -517,8 +517,8 @@ Each needs an answer from the business or the owner. None blocks the work in §1
 
 ## 12. Suggested order of work
 
-Smallest first; each is independently shippable and testable. Items 1 to 3 are done
-(`docs/UI_PLAN.md` sections 14 to 21); items 4 to 6 are still open.
+Smallest first; each is independently shippable and testable. Items 1 to 4 are done
+(`docs/UI_PLAN.md` sections 14 to 22); items 5 and 6 are still open.
 
 1. **D1 — escape PDF text in HTML.** Security-class, ~5 lines, one test.
 2. **D2 + D3 — the new skin, in one pass.** Tokens (§5.2), fonts (§5.3),
@@ -527,8 +527,7 @@ Smallest first; each is independently shippable and testable. Items 1 to 3 are d
    small radii, input `edge` and focus. One PR, checked live in both themes,
    with a before/after screenshot.
 3. **D6** — stable export area (done); **D4** — the stale mock (done, step 7).
-4. **Decisions 3 and 4** — `missing` and `edited` markers (new, small, high
-   value for trust).
+4. **Decisions 3 and 4** — `missing` and `edited` markers (done).
 5. **Pane proportions** — only after a live look at a real dossier (D8).
 6. **Language** — once decision 1 is made; then it is a `words.py` job.
 

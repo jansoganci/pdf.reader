@@ -16,7 +16,8 @@ So there are two shapes, and both go through `esc`:
 
 import html
 
-PLAIN_KINDS = ("caption", "body", "printed")  # printed: what the paper said, set in the mono face
+PLAIN_KINDS = ("caption", "body", "printed", "note")
+# printed: what the paper said, in the mono face. note: something the app says, in the sans face.
 
 
 def esc(value) -> str:
@@ -25,7 +26,7 @@ def esc(value) -> str:
 
 
 def plain(value, kind: str = "caption") -> str:
-    """One line of text as an escaped block. `kind` picks the look: caption, body or printed."""
+    """One line of text as an escaped block. `kind` picks the look: caption, body, printed or note."""
     if kind not in PLAIN_KINDS:
         raise ValueError(f"unknown kind: {kind}")
     return f'<div class="pdf-{kind}">{esc(value)}</div>'

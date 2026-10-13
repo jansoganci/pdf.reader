@@ -210,6 +210,13 @@
 .chip.warn { background: var(--review-fill); color: var(--on-review); }
 .chip.crit { background: var(--crit-fill); color: var(--on-crit); }
 
+/* Mark: outlined, for information that is not a status (a value a person changed). */
+.mark {
+    display: inline-flex; align-items: center; border-radius: var(--radius-sm);
+    border: 1px solid var(--edge); padding: 1px 7px; font-size: 12px; line-height: 16px; font-weight: 600;
+    color: var(--ink-secondary); white-space: nowrap;
+}
+
 /* Wordmark: the product name in type. */
 .wordmark-name { font-size: 20px; line-height: 28px; font-weight: 600; letter-spacing: -0.01em; color: var(--ink); }
 .wordmark-meta {
@@ -241,6 +248,8 @@
    written out. */
 .pdf-caption { font-size: 13px; line-height: 18px; color: var(--ink-secondary); margin-bottom: 16px; }
 .pdf-body { font-size: 15px; line-height: 22px; color: var(--ink); margin-bottom: 16px; }
+/* Something the app says in place of paper text (a field that was not read). Sans, never mono. */
+.pdf-note { font-size: 13px; line-height: 18px; color: var(--ink-secondary); margin-bottom: 16px; }
 /* What the paper said, in the mono face. Mono means "copied exactly". */
 .stApp div.pdf-printed.pdf-printed {
     font-family: var(--font-mono) !important; font-size: 13px; line-height: 18px;

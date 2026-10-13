@@ -11,3 +11,12 @@ TIER_WORDS = {
 def chip(tier: str) -> str:
     """A filled label with the tier's word: on a row or card, and once in the header for the dossier."""
     return f'<span class="chip {tier}">{esc(TIER_WORDS[tier])}</span>'
+
+
+EDITED_WORD = "Edited"
+
+
+def edited_mark() -> str:
+    """A small outlined label for a value a person changed. Outlined, not filled: it is information,
+    not a status, so it never competes with the chips."""
+    return f'<span class="mark">{esc(EDITED_WORD)}</span>'
